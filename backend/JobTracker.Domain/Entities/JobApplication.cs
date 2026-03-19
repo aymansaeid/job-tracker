@@ -4,8 +4,8 @@ namespace JobTracker.Domain.Entities
 {
     public class JobApplication
     {
-        public Guid Id { get; set; }
-        public Guid UserId { get; set; }
+        public int Id { get; set; }
+        public int UserId { get; set; }
 
         public string CompanyName { get; set; } = default!;
         public string JobTitle { get; set; } = default!;
