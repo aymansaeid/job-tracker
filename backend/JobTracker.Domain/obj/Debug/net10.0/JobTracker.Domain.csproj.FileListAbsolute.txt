@@ -1,0 +1,11 @@
+C:\Users\2A04\source\repos\JobTracker.Domain\bin\Debug\net10.0\JobTracker.Domain.deps.json
+C:\Users\2A04\source\repos\JobTracker.Domain\bin\Debug\net10.0\JobTracker.Domain.dll
+C:\Users\2A04\source\repos\JobTracker.Domain\bin\Debug\net10.0\JobTracker.Domain.pdb
+C:\Users\2A04\source\repos\JobTracker.Domain\obj\Debug\net10.0\JobTracker.Domain.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\2A04\source\repos\JobTracker.Domain\obj\Debug\net10.0\JobTracker.Domain.AssemblyInfoInputs.cache
+C:\Users\2A04\source\repos\JobTracker.Domain\obj\Debug\net10.0\JobTracker.Domain.AssemblyInfo.cs
+C:\Users\2A04\source\repos\JobTracker.Domain\obj\Debug\net10.0\JobTracker.Domain.csproj.CoreCompileInputs.cache
+C:\Users\2A04\source\repos\JobTracker.Domain\obj\Debug\net10.0\JobTracker.Domain.dll
+C:\Users\2A04\source\repos\JobTracker.Domain\obj\Debug\net10.0\refint\JobTracker.Domain.dll
+C:\Users\2A04\source\repos\JobTracker.Domain\obj\Debug\net10.0\JobTracker.Domain.pdb
+C:\Users\2A04\source\repos\JobTracker.Domain\obj\Debug\net10.0\ref\JobTracker.Domain.dll
