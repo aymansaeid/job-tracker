@@ -15,12 +15,12 @@ public class UsersController : ControllerBase
         _userService = userService;
     }
 
-    [HttpPost]
-    public async Task<IActionResult> Create(CreateUserRequest request)
-    {
-        var result = await _userService.CreateAsync(request);
-        return Ok(result);
-    }
+ [HttpPost]
+public async Task<IActionResult> Create(CreateUserRequest request)
+{
+    var result = await _userService.CreateAsync(request);
+    return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+}
 
     [HttpGet]
     public async Task<IActionResult> GetAll()

@@ -1,0 +1,33 @@
+﻿using FluentValidation;
+using JobTracker.Application.DTOs.Applications;
+
+namespace JobTracker.Application.Validators;
+
+public class CreateJobApplicationRequestValidator : AbstractValidator<CreateJobApplicationRequest>
+{
+    public CreateJobApplicationRequestValidator()
+    {
+        RuleFor(x => x.UserId)
+            .GreaterThan(0);
+
+        RuleFor(x => x.CompanyName)
+            .NotEmpty()
+            .MaximumLength(120);
+
+        RuleFor(x => x.JobTitle)
+            .NotEmpty()
+            .MaximumLength(120);
+
+        RuleFor(x => x.JobUrl)
+            .MaximumLength(500)
+            .When(x => !string.IsNullOrWhiteSpace(x.JobUrl));
+
+        RuleFor(x => x.Location)
+            .MaximumLength(120)
+            .When(x => !string.IsNullOrWhiteSpace(x.Location));
+
+        RuleFor(x => x.Notes)
+            .MaximumLength(2000)
+            .When(x => !string.IsNullOrWhiteSpace(x.Notes));
+    }
+}

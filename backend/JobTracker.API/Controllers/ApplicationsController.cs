@@ -19,7 +19,7 @@ public class ApplicationsController : ControllerBase
     public async Task<IActionResult> Create(CreateJobApplicationRequest request)
     {
         var result = await _jobApplicationService.CreateAsync(request);
-        return Ok(result);
+        return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
     [HttpGet("{id:int}")]

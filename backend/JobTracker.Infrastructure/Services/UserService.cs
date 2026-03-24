@@ -1,4 +1,6 @@
-﻿using JobTracker.Application.DTOs.Users;
+﻿using FluentValidation;
+using JobTracker.Application.DTOs.Users;
+using JobTracker.Application.Exceptions;
 using JobTracker.Application.Interfaces;
 using JobTracker.Domain.Entities;
 using JobTracker.Infrastructure.Persistence;
@@ -9,19 +11,25 @@ namespace JobTracker.Infrastructure.Services;
 public class UserService : IUserService
 {
     private readonly ApplicationDbContext _context;
+    private readonly IValidator<CreateUserRequest> _createUserValidator;
 
-    public UserService(ApplicationDbContext context)
+    public UserService(
+        ApplicationDbContext context,
+        IValidator<CreateUserRequest> createUserValidator)
     {
         _context = context;
+        _createUserValidator = createUserValidator;
     }
 
     public async Task<UserResponse> CreateAsync(CreateUserRequest request)
     {
+        await _createUserValidator.ValidateAndThrowAsync(request);
+
         var existingUser = await _context.Users
             .FirstOrDefaultAsync(x => x.Email == request.Email);
 
         if (existingUser is not null)
-            throw new Exception("Email already exists.");
+            throw new ConflictException("Email already exists.");
 
         var user = new User
         {

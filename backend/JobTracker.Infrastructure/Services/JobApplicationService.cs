@@ -1,4 +1,6 @@
-﻿using JobTracker.Application.DTOs.Applications;
+﻿using FluentValidation;
+using JobTracker.Application.DTOs.Applications;
+using JobTracker.Application.Exceptions;
 using JobTracker.Application.Interfaces;
 using JobTracker.Domain.Entities;
 using JobTracker.Domain.Enums;
@@ -10,18 +12,30 @@ namespace JobTracker.Infrastructure.Services;
 public class JobApplicationService : IJobApplicationService
 {
     private readonly ApplicationDbContext _context;
+    private readonly IValidator<CreateJobApplicationRequest> _createValidator;
+    private readonly IValidator<UpdateJobApplicationRequest> _updateValidator;
+    private readonly IValidator<ChangeApplicationStageRequest> _changeStageValidator;
 
-    public JobApplicationService(ApplicationDbContext context)
+    public JobApplicationService(
+        ApplicationDbContext context,
+        IValidator<CreateJobApplicationRequest> createValidator,
+        IValidator<UpdateJobApplicationRequest> updateValidator,
+        IValidator<ChangeApplicationStageRequest> changeStageValidator)
     {
         _context = context;
+        _createValidator = createValidator;
+        _updateValidator = updateValidator;
+        _changeStageValidator = changeStageValidator;
     }
 
     public async Task<JobApplicationResponse> CreateAsync(CreateJobApplicationRequest request)
     {
+        await _createValidator.ValidateAndThrowAsync(request);
+
         var userExists = await _context.Users.AnyAsync(x => x.Id == request.UserId);
 
         if (!userExists)
-            throw new Exception("User not found.");
+            throw new NotFoundException("User not found.");
 
         var application = new JobApplication
         {
@@ -88,6 +102,8 @@ public class JobApplicationService : IJobApplicationService
 
     public async Task<JobApplicationResponse?> UpdateAsync(int id, UpdateJobApplicationRequest request)
     {
+        await _updateValidator.ValidateAndThrowAsync(request);
+
         var application = await _context.JobApplications
             .FirstOrDefaultAsync(x => x.Id == id);
 
@@ -110,6 +126,8 @@ public class JobApplicationService : IJobApplicationService
 
     public async Task<JobApplicationResponse?> ChangeStageAsync(int id, ChangeApplicationStageRequest request)
     {
+        await _changeStageValidator.ValidateAndThrowAsync(request);
+
         var application = await _context.JobApplications
             .FirstOrDefaultAsync(x => x.Id == id);
 
