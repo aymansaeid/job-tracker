@@ -39,4 +39,44 @@ public class ApplicationsController : ControllerBase
         var result = await _jobApplicationService.GetByUserIdAsync(userId);
         return Ok(result);
     }
+
+    [HttpPut("{id:int}")]
+    public async Task<IActionResult> Update(int id, UpdateJobApplicationRequest request)
+    {
+        var result = await _jobApplicationService.UpdateAsync(id, request);
+
+        if (result is null)
+            return NotFound();
+
+        return Ok(result);
+    }
+
+    [HttpPatch("{id:int}/stage")]
+    public async Task<IActionResult> ChangeStage(int id, ChangeApplicationStageRequest request)
+    {
+        var result = await _jobApplicationService.ChangeStageAsync(id, request);
+
+        if (result is null)
+            return NotFound();
+
+        return Ok(result);
+    }
+
+    [HttpPatch("{id:int}/archive")]
+    public async Task<IActionResult> Archive(int id)
+    {
+        var result = await _jobApplicationService.ArchiveAsync(id);
+
+        if (!result)
+            return NotFound();
+
+        return NoContent();
+    }
+
+    [HttpGet("{id:int}/history")]
+    public async Task<IActionResult> GetHistory(int id)
+    {
+        var result = await _jobApplicationService.GetStageHistoryAsync(id);
+        return Ok(result);
+    }
 }
