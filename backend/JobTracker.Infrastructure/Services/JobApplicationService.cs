@@ -1,5 +1,6 @@
 ﻿using FluentValidation;
 using JobTracker.Application.DTOs.Applications;
+using JobTracker.Application.DTOs.Common;
 using JobTracker.Application.Exceptions;
 using JobTracker.Application.Interfaces;
 using JobTracker.Domain.Entities;
@@ -69,27 +70,52 @@ public class JobApplicationService : IJobApplicationService
         return MapToResponse(application);
     }
 
-    public async Task<List<JobApplicationResponse>> GetByUserIdAsync(int userId)
+    public async Task<PagedResponse<JobApplicationResponse>> GetByUserIdAsync(int userId, GetJobApplicationsRequest request)
     {
-        return await _context.JobApplications
+        // 1. Start with a base query
+        var query = _context.JobApplications
             .Where(x => x.UserId == userId)
-            .OrderByDescending(x => x.AppliedAt)
-            .Select(x => new JobApplicationResponse
-            {
-                Id = x.Id,
-                UserId = x.UserId,
-                CompanyName = x.CompanyName,
-                JobTitle = x.JobTitle,
-                JobUrl = x.JobUrl,
-                Location = x.Location,
-                EmploymentType = x.EmploymentType,
-                CurrentStage = x.CurrentStage,
-                AppliedAt = x.AppliedAt,
-                LastUpdatedAt = x.LastUpdatedAt,
-                Notes = x.Notes,
-                IsArchived = x.IsArchived
-            })
+            .AsQueryable();
+
+        // 2. Apply "Archived" filter
+        if (!request.IncludeArchived)
+        {
+            query = query.Where(x => !x.IsArchived);
+        }
+
+        // 3. Apply "Stage" filter
+        if (request.Stage.HasValue)
+        {
+            query = query.Where(x => x.CurrentStage == request.Stage.Value);
+        }
+
+        // 4. Apply "Search" filter
+        if (!string.IsNullOrWhiteSpace(request.SearchTerm))
+        {
+            var searchTerm = request.SearchTerm.ToLower();
+            query = query.Where(x =>
+                x.CompanyName.ToLower().Contains(searchTerm) ||
+                x.JobTitle.ToLower().Contains(searchTerm));
+        }
+
+        // 5. Get the total count BEFORE paginating
+        var totalCount = await query.CountAsync();
+
+        // 6. Apply sorting and pagination
+        var applications = await query
+            .OrderByDescending(x => x.AppliedAt) // Show newest first
+            .Skip((request.PageNumber - 1) * request.PageSize)
+            .Take(request.PageSize)
             .ToListAsync();
+
+        // 7. Map and return
+        return new PagedResponse<JobApplicationResponse>
+        {
+            Items = applications.Select(MapToResponse).ToList(),
+            TotalCount = totalCount,
+            PageNumber = request.PageNumber,
+            PageSize = request.PageSize
+        };
     }
 
     public async Task<JobApplicationResponse?> GetByIdAsync(int userId, int id)

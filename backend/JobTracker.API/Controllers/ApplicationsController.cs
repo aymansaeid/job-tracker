@@ -45,11 +45,11 @@ public class ApplicationsController : ControllerBase
         return Ok($"User ID from token: {userId}");
     }
 
-    [HttpGet("mine")]
-    public async Task<IActionResult> GetMine()
+    [HttpGet]
+    public async Task<IActionResult> GetMine([FromQuery] GetJobApplicationsRequest request)
     {
-        var userId = User.GetUserId();
-        var result = await _jobApplicationService.GetByUserIdAsync(userId);
+        var userId = User.GetUserId(); 
+        var result = await _jobApplicationService.GetByUserIdAsync(userId, request);
         return Ok(result);
     }
 

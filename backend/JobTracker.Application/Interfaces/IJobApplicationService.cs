@@ -1,11 +1,12 @@
 ﻿using JobTracker.Application.DTOs.Applications;
+using JobTracker.Application.DTOs.Common; // Add this using statement
 
 namespace JobTracker.Application.Interfaces;
 
 public interface IJobApplicationService
 {
     Task<JobApplicationResponse> CreateAsync(int userId, CreateJobApplicationRequest request);
-    Task<List<JobApplicationResponse>> GetByUserIdAsync(int userId);
+    Task<PagedResponse<JobApplicationResponse>> GetByUserIdAsync(int userId, GetJobApplicationsRequest request);
     Task<JobApplicationResponse?> GetByIdAsync(int userId, int id);
     Task<JobApplicationResponse?> UpdateAsync(int userId, int id, UpdateJobApplicationRequest request);
     Task<JobApplicationResponse?> ChangeStageAsync(int userId, int id, ChangeApplicationStageRequest request);
