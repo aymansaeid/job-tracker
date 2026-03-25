@@ -1,5 +1,5 @@
 ﻿using JobTracker.Application.DTOs.Applications;
-using JobTracker.Application.DTOs.Common; // Add this using statement
+using JobTracker.Application.DTOs.Common;
 
 namespace JobTracker.Application.Interfaces;
 
@@ -12,4 +12,6 @@ public interface IJobApplicationService
     Task<JobApplicationResponse?> ChangeStageAsync(int userId, int id, ChangeApplicationStageRequest request);
     Task<bool> ArchiveAsync(int userId, int id);
     Task<List<ApplicationStageHistoryResponse>> GetStageHistoryAsync(int userId, int applicationId);
+
+    Task<DashboardStatsResponse> GetDashboardStatsAsync(int userId);
 }

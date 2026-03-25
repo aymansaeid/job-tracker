@@ -235,4 +235,34 @@ public class JobApplicationService : IJobApplicationService
             IsArchived = application.IsArchived
         };
     }
+
+    public async Task<DashboardStatsResponse> GetDashboardStatsAsync(int userId)
+    {
+        // 1. Group by stage and count directly in the database (ignoring archived ones)
+        var stageCounts = await _context.JobApplications
+            .Where(x => x.UserId == userId && !x.IsArchived)
+            .GroupBy(x => x.CurrentStage)
+            .Select(g => new { Stage = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.Stage, x => x.Count);
+
+        // 2. Sum the values for the total
+        var total = stageCounts.Values.Sum();
+
+        // 3. Map to DTO (using GetValueOrDefault in case a stage has 0 applications)
+        var response = new DashboardStatsResponse
+        {
+            TotalApplications = total,
+            AppliedCount = stageCounts.GetValueOrDefault(ApplicationStage.Applied, 0),
+            InReviewCount = stageCounts.GetValueOrDefault(ApplicationStage.InReview, 0),
+            InterviewCount = stageCounts.GetValueOrDefault(ApplicationStage.Interview, 0),
+            OfferCount = stageCounts.GetValueOrDefault(ApplicationStage.Offer, 0),
+            RejectedCount = stageCounts.GetValueOrDefault(ApplicationStage.Rejected, 0),
+            GhostedCount = stageCounts.GetValueOrDefault(ApplicationStage.Ghosted, 0)
+        };
+
+        // 4. Calculate Active Applications
+        response.ActiveApplications = total - response.RejectedCount - response.GhostedCount;
+
+        return response;
+    }
 }

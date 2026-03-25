@@ -26,6 +26,14 @@ public class ApplicationsController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
+    [HttpGet("stats")]
+    public async Task<IActionResult> GetStats()
+    {
+        var userId = User.GetUserId();
+        var result = await _jobApplicationService.GetDashboardStatsAsync(userId);
+        return Ok(result);
+    }
+
     [HttpGet("{id:int}")]
     public async Task<IActionResult> GetById(int id)
     {
