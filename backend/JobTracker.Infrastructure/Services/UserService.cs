@@ -35,7 +35,7 @@ public class UserService : IUserService
         {
             FullName = request.FullName,
             Email = request.Email,
-            PasswordHash = request.Password
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password)
         };
 
         _context.Users.Add(user);

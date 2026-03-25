@@ -6,11 +6,11 @@ public static class ClaimsPrincipalExtensions
 {
     public static int GetUserId(this ClaimsPrincipal user)
     {
-        var userIdValue = user.FindFirstValue(ClaimTypes.NameIdentifier);
+        var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        if (string.IsNullOrWhiteSpace(userIdValue))
-            throw new UnauthorizedAccessException("User id claim is missing.");
+        if (userId == null)
+            throw new UnauthorizedAccessException("User ID not found in token");
 
-        return int.Parse(userIdValue);
+        return int.Parse(userId);
     }
 }

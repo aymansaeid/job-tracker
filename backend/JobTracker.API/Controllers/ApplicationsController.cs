@@ -29,12 +29,20 @@ public class ApplicationsController : ControllerBase
     [HttpGet("{id:int}")]
     public async Task<IActionResult> GetById(int id)
     {
-        var result = await _jobApplicationService.GetByIdAsync(id);
+        var userId = User.GetUserId();
+        var result = await _jobApplicationService.GetByIdAsync(userId, id);
 
         if (result is null)
             return NotFound();
 
         return Ok(result);
+    }
+
+    [HttpGet("token-check")]
+    public IActionResult GetMyApplications()
+    {
+        var userId = User.GetUserId();
+        return Ok($"User ID from token: {userId}");
     }
 
     [HttpGet("mine")]
@@ -48,7 +56,8 @@ public class ApplicationsController : ControllerBase
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, UpdateJobApplicationRequest request)
     {
-        var result = await _jobApplicationService.UpdateAsync(id, request);
+        var userId = User.GetUserId(); 
+        var result = await _jobApplicationService.UpdateAsync(userId, id, request);
 
         if (result is null)
             return NotFound();
@@ -59,7 +68,8 @@ public class ApplicationsController : ControllerBase
     [HttpPatch("{id:int}/stage")]
     public async Task<IActionResult> ChangeStage(int id, ChangeApplicationStageRequest request)
     {
-        var result = await _jobApplicationService.ChangeStageAsync(id, request);
+        var userId = User.GetUserId(); 
+        var result = await _jobApplicationService.ChangeStageAsync(userId, id, request);
 
         if (result is null)
             return NotFound();
@@ -70,7 +80,8 @@ public class ApplicationsController : ControllerBase
     [HttpPatch("{id:int}/archive")]
     public async Task<IActionResult> Archive(int id)
     {
-        var result = await _jobApplicationService.ArchiveAsync(id);
+        var userId = User.GetUserId(); 
+        var result = await _jobApplicationService.ArchiveAsync(userId, id);
 
         if (!result)
             return NotFound();
@@ -81,7 +92,8 @@ public class ApplicationsController : ControllerBase
     [HttpGet("{id:int}/history")]
     public async Task<IActionResult> GetHistory(int id)
     {
-        var result = await _jobApplicationService.GetStageHistoryAsync(id);
+        var userId = User.GetUserId();
+        var result = await _jobApplicationService.GetStageHistoryAsync(userId, id);
         return Ok(result);
     }
 }

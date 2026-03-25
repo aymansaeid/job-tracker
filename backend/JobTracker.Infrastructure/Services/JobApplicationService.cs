@@ -92,20 +92,20 @@ public class JobApplicationService : IJobApplicationService
             .ToListAsync();
     }
 
-    public async Task<JobApplicationResponse?> GetByIdAsync(int id)
+    public async Task<JobApplicationResponse?> GetByIdAsync(int userId, int id)
     {
         var application = await _context.JobApplications
-            .FirstOrDefaultAsync(x => x.Id == id);
+            .FirstOrDefaultAsync(x => x.Id == id && x.UserId == userId);
 
         return application is null ? null : MapToResponse(application);
     }
 
-    public async Task<JobApplicationResponse?> UpdateAsync(int id, UpdateJobApplicationRequest request)
+    public async Task<JobApplicationResponse?> UpdateAsync(int userId, int id, UpdateJobApplicationRequest request)
     {
         await _updateValidator.ValidateAndThrowAsync(request);
 
         var application = await _context.JobApplications
-            .FirstOrDefaultAsync(x => x.Id == id);
+            .FirstOrDefaultAsync(x => x.Id == id && x.UserId == userId);
 
         if (application is null)
             return null;
@@ -124,12 +124,12 @@ public class JobApplicationService : IJobApplicationService
         return MapToResponse(application);
     }
 
-    public async Task<JobApplicationResponse?> ChangeStageAsync(int id, ChangeApplicationStageRequest request)
+    public async Task<JobApplicationResponse?> ChangeStageAsync(int userId, int id, ChangeApplicationStageRequest request)
     {
         await _changeStageValidator.ValidateAndThrowAsync(request);
 
         var application = await _context.JobApplications
-            .FirstOrDefaultAsync(x => x.Id == id);
+            .FirstOrDefaultAsync(x => x.Id == id && x.UserId == userId);
 
         if (application is null)
             return null;
@@ -154,10 +154,10 @@ public class JobApplicationService : IJobApplicationService
         return MapToResponse(application);
     }
 
-    public async Task<bool> ArchiveAsync(int id)
+    public async Task<bool> ArchiveAsync(int userId, int id)
     {
         var application = await _context.JobApplications
-            .FirstOrDefaultAsync(x => x.Id == id);
+            .FirstOrDefaultAsync(x => x.Id == id && x.UserId == userId);
 
         if (application is null)
             return false;
@@ -169,8 +169,14 @@ public class JobApplicationService : IJobApplicationService
         return true;
     }
 
-    public async Task<List<ApplicationStageHistoryResponse>> GetStageHistoryAsync(int applicationId)
+    public async Task<List<ApplicationStageHistoryResponse>> GetStageHistoryAsync(int userId, int applicationId)
     {
+        var ownsApplication = await _context.JobApplications
+            .AnyAsync(x => x.Id == applicationId && x.UserId == userId);
+
+        if (!ownsApplication)
+            return new List<ApplicationStageHistoryResponse>();
+
         return await _context.ApplicationStageHistories
             .Where(x => x.JobApplicationId == applicationId)
             .OrderByDescending(x => x.ChangedAt)
