@@ -1,10 +1,13 @@
-﻿using JobTracker.Application.DTOs.Applications;
+﻿using JobTracker.API.Extensions;
+using JobTracker.Application.DTOs.Applications;
 using JobTracker.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace JobTracker.API.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 public class ApplicationsController : ControllerBase
 {
@@ -18,7 +21,8 @@ public class ApplicationsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create(CreateJobApplicationRequest request)
     {
-        var result = await _jobApplicationService.CreateAsync(request);
+        var userId = User.GetUserId();
+        var result = await _jobApplicationService.CreateAsync(userId, request);
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
@@ -33,9 +37,10 @@ public class ApplicationsController : ControllerBase
         return Ok(result);
     }
 
-    [HttpGet("user/{userId:int}")]
-    public async Task<IActionResult> GetByUserId(int userId)
+    [HttpGet("mine")]
+    public async Task<IActionResult> GetMine()
     {
+        var userId = User.GetUserId();
         var result = await _jobApplicationService.GetByUserIdAsync(userId);
         return Ok(result);
     }

@@ -28,18 +28,18 @@ public class JobApplicationService : IJobApplicationService
         _changeStageValidator = changeStageValidator;
     }
 
-    public async Task<JobApplicationResponse> CreateAsync(CreateJobApplicationRequest request)
+    public async Task<JobApplicationResponse> CreateAsync(int userId, CreateJobApplicationRequest request)
     {
         await _createValidator.ValidateAndThrowAsync(request);
 
-        var userExists = await _context.Users.AnyAsync(x => x.Id == request.UserId);
+        var userExists = await _context.Users.AnyAsync(x => x.Id == userId);
 
         if (!userExists)
             throw new NotFoundException("User not found.");
 
         var application = new JobApplication
         {
-            UserId = request.UserId,
+            UserId = userId,
             CompanyName = request.CompanyName,
             JobTitle = request.JobTitle,
             JobUrl = request.JobUrl,

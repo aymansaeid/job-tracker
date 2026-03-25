@@ -4,7 +4,6 @@ namespace JobTracker.Application.DTOs.Applications;
 
 public class CreateJobApplicationRequest
 {
-    public int UserId { get; set; }
     public string CompanyName { get; set; } = default!;
     public string JobTitle { get; set; } = default!;
     public string? JobUrl { get; set; }

@@ -7,9 +7,6 @@ public class CreateJobApplicationRequestValidator : AbstractValidator<CreateJobA
 {
     public CreateJobApplicationRequestValidator()
     {
-        RuleFor(x => x.UserId)
-            .GreaterThan(0);
-
         RuleFor(x => x.CompanyName)
             .NotEmpty()
             .MaximumLength(120);
