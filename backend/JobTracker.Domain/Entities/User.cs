@@ -11,6 +11,8 @@ namespace JobTracker.Domain.Entities
         public string Email { get; set; } = default!;
         public string PasswordHash { get; set; } = default!;
 
+        public string? GoogleRefreshToken { get; set; }
+
         public List<JobApplication> JobApplications { get; set; } = new();
     }
 }

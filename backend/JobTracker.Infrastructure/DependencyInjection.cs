@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using JobTracker.Infrastructure.Gmail;
 
 namespace JobTracker.Infrastructure;
 
@@ -17,6 +18,7 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
+
         var connectionString = configuration.GetConnectionString("DefaultConnection");
 
         services.AddDbContext<ApplicationDbContext>(options =>
@@ -24,6 +26,8 @@ public static class DependencyInjection
 
         services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
 
+        services.Configure<GoogleAuthSettings>(configuration.GetSection("GoogleAuth"));
+        
         var jwtSettings = configuration.GetSection("Jwt").Get<JwtSettings>()!;
         var key = Encoding.UTF8.GetBytes(jwtSettings.Key);
 
@@ -52,6 +56,7 @@ public static class DependencyInjection
         services.AddScoped<IJobApplicationService, JobApplicationService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
+        services.AddScoped<IGmailService, Infrastructure.Gmail.GmailService>();
 
         return services;
     }

@@ -265,4 +265,18 @@ public class JobApplicationService : IJobApplicationService
 
         return response;
     }
+
+    public async Task<bool> DeleteAsync(int userId, int id)
+    {
+        var application = await _context.JobApplications
+            .FirstOrDefaultAsync(x => x.Id == id && x.UserId == userId); // Security check!
+
+        if (application is null)
+            return false;
+
+        _context.JobApplications.Remove(application);
+        await _context.SaveChangesAsync();
+
+        return true;
+    }
 }

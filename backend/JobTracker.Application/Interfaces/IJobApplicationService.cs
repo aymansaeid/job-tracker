@@ -14,4 +14,5 @@ public interface IJobApplicationService
     Task<List<ApplicationStageHistoryResponse>> GetStageHistoryAsync(int userId, int applicationId);
 
     Task<DashboardStatsResponse> GetDashboardStatsAsync(int userId);
+    Task<bool> DeleteAsync(int userId, int id);
 }

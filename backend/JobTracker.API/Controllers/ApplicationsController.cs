@@ -104,4 +104,16 @@ public class ApplicationsController : ControllerBase
         var result = await _jobApplicationService.GetStageHistoryAsync(userId, id);
         return Ok(result);
     }
+
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var userId = User.GetUserId();
+        var result = await _jobApplicationService.DeleteAsync(userId, id);
+
+        if (!result)
+            return NotFound();
+
+        return NoContent();
+    }
 }
