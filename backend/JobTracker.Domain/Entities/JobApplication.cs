@@ -20,5 +20,7 @@ namespace JobTracker.Domain.Entities
 
         public User? User { get; set; }
         public List<ApplicationStageHistory> StageHistories { get; set; } = new();
+
+        public List<JobEmail> LinkedEmails { get; set; } = new();
     }
 }

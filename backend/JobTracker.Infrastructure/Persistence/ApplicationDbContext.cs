@@ -20,4 +20,6 @@ public class ApplicationDbContext : DbContext
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
     }
+
+    public DbSet<JobEmail> JobEmails => Set<JobEmail>();
 }

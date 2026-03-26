@@ -47,4 +47,14 @@ public class IntegrationsController : ControllerBase
         // e.g., return Redirect("http://localhost:5173/settings?integration=success");
         return Ok(new { Message = "Gmail connected successfully! You can close this window." });
     }
+
+    [Authorize]
+    [HttpGet("google/emails/recent")]
+    public async Task<IActionResult> GetRecentJobEmails([FromQuery] int limit = 10)
+    {
+        var userId = User.GetUserId();
+        var emails = await _gmailService.GetRecentJobEmailsAsync(userId, limit);
+
+        return Ok(emails);
+    }
 }

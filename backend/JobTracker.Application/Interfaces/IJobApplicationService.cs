@@ -15,4 +15,6 @@ public interface IJobApplicationService
 
     Task<DashboardStatsResponse> GetDashboardStatsAsync(int userId);
     Task<bool> DeleteAsync(int userId, int id);
+
+    Task<bool> LinkEmailAsync(int userId, int applicationId, LinkEmailRequest request);
 }

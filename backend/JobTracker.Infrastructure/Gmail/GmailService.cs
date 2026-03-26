@@ -3,6 +3,8 @@ using Google.Apis.Auth.OAuth2.Flows;
 using Google.Apis.Auth.OAuth2.Requests; 
 using Google.Apis.Auth.OAuth2.Responses;
 using Google.Apis.Gmail.v1;
+using Google.Apis.Services;
+using JobTracker.Application.DTOs.Integrations;
 using JobTracker.Application.Interfaces;
 using JobTracker.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -75,5 +77,63 @@ public class GmailService : IGmailService
         }
 
         return true;
+    }
+
+    public async Task<List<EmailMessageResponse>> GetRecentJobEmailsAsync(int userId, int maxResults = 10)
+    {
+        var user = await _context.Users.FindAsync(userId);
+        if (user is null || string.IsNullOrWhiteSpace(user.GoogleRefreshToken))
+            return new List<EmailMessageResponse>(); // User hasn't connected Gmail
+
+        // 1. Create Google Credentials using the saved Refresh Token
+        var token = new TokenResponse { RefreshToken = user.GoogleRefreshToken };
+        var credential = new UserCredential(_flow, userId.ToString(), token);
+
+        // 2. Initialize the Gmail API Client
+        var gmailClient = new Google.Apis.Gmail.v1.GmailService(new BaseClientService.Initializer
+        {
+            HttpClientInitializer = credential,
+            ApplicationName = "JobTracker API"
+        });
+
+        // 3. Search for job-related emails from the last 30 days
+        // You can tweak this query to be as specific as you want
+        var request = gmailClient.Users.Messages.List("me");
+        request.Q = "(subject:application OR subject:interview OR subject:offer OR subject:rejection) newer_than:30d";
+        request.MaxResults = maxResults;
+
+        var response = await request.ExecuteAsync();
+        var emails = new List<EmailMessageResponse>();
+
+        if (response.Messages is null || !response.Messages.Any())
+            return emails;
+
+        // 4. Fetch the actual content for each message found
+        foreach (var messageItem in response.Messages)
+        {
+            var msgRequest = gmailClient.Users.Messages.Get("me", messageItem.Id);
+            msgRequest.Format = UsersResource.MessagesResource.GetRequest.FormatEnum.Metadata;
+            msgRequest.MetadataHeaders = new List<string> { "Subject", "From", "Date" };
+
+            var msgData = await msgRequest.ExecuteAsync();
+
+            var headers = msgData.Payload.Headers;
+            var subject = headers.FirstOrDefault(h => h.Name == "Subject")?.Value ?? "No Subject";
+            var sender = headers.FirstOrDefault(h => h.Name == "From")?.Value ?? "Unknown Sender";
+            var dateStr = headers.FirstOrDefault(h => h.Name == "Date")?.Value;
+
+            DateTime.TryParse(dateStr, out DateTime dateReceived);
+
+            emails.Add(new EmailMessageResponse
+            {
+                MessageId = msgData.Id,
+                Subject = subject,
+                Sender = sender,
+                Snippet = msgData.Snippet, // A short preview of the email body
+                DateReceived = dateReceived
+            });
+        }
+
+        return emails.OrderByDescending(e => e.DateReceived).ToList();
     }
 }

@@ -16,4 +16,6 @@ public class JobApplicationResponse
     public DateTime LastUpdatedAt { get; set; }
     public string? Notes { get; set; }
     public bool IsArchived { get; set; }
+
+    public List<LinkedEmailResponse> LinkedEmails { get; set; } = new();
 }

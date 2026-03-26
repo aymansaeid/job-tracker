@@ -1,4 +1,6 @@
-﻿namespace JobTracker.Application.Interfaces;
+﻿using JobTracker.Application.DTOs.Integrations;
+
+namespace JobTracker.Application.Interfaces;
 
 public interface IGmailService
 {
@@ -7,4 +9,6 @@ public interface IGmailService
 
     // Exchanges the code for a token and saves it to the user
     Task<bool> ExchangeCodeForTokenAsync(int userId, string code);
+
+    Task<List<EmailMessageResponse>> GetRecentJobEmailsAsync(int userId, int maxResults = 10);
 }
