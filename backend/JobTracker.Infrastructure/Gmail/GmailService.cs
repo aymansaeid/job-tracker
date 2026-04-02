@@ -136,4 +136,77 @@ public class GmailService : IGmailService
 
         return emails.OrderByDescending(e => e.DateReceived).ToList();
     }
+
+    public async Task<EmailFullResponse?> GetEmailBodyAsync(int userId, string messageId)
+    {
+        var user = await _context.Users.FindAsync(userId);
+        if (user is null || string.IsNullOrWhiteSpace(user.GoogleRefreshToken))
+            return null;
+
+        var token = new TokenResponse { RefreshToken = user.GoogleRefreshToken };
+        var credential = new UserCredential(_flow, userId.ToString(), token);
+        var gmailClient = new Google.Apis.Gmail.v1.GmailService(new BaseClientService.Initializer
+        {
+            HttpClientInitializer = credential,
+            ApplicationName = "JobTracker API"
+        });
+
+        // Fetch the FULL email this time, not just metadata
+        var request = gmailClient.Users.Messages.Get("me", messageId);
+        request.Format = UsersResource.MessagesResource.GetRequest.FormatEnum.Full;
+        var msgData = await request.ExecuteAsync();
+
+        if (msgData == null) return null;
+
+        var headers = msgData.Payload.Headers;
+        var subject = headers.FirstOrDefault(h => h.Name == "Subject")?.Value ?? "No Subject";
+        var sender = headers.FirstOrDefault(h => h.Name == "From")?.Value ?? "Unknown Sender";
+        DateTime.TryParse(headers.FirstOrDefault(h => h.Name == "Date")?.Value, out DateTime dateReceived);
+
+        string htmlBody = "";
+        string plainText = "";
+
+        // Extract the body (Gmail nests email parts depending on if it has attachments/HTML)
+        if (msgData.Payload.Parts != null)
+        {
+            foreach (var part in msgData.Payload.Parts)
+            {
+                if (part.MimeType == "text/html" && part.Body?.Data != null)
+                    htmlBody = DecodeBase64Url(part.Body.Data);
+                else if (part.MimeType == "text/plain" && part.Body?.Data != null)
+                    plainText = DecodeBase64Url(part.Body.Data);
+            }
+        }
+        else if (msgData.Payload.Body?.Data != null)
+        {
+            // Simple emails with no parts
+            if (msgData.Payload.MimeType == "text/html")
+                htmlBody = DecodeBase64Url(msgData.Payload.Body.Data);
+            else
+                plainText = DecodeBase64Url(msgData.Payload.Body.Data);
+        }
+
+        return new EmailFullResponse
+        {
+            MessageId = msgData.Id,
+            Subject = subject,
+            Sender = sender,
+            DateReceived = dateReceived,
+            HtmlBody = htmlBody,
+            PlainTextBody = plainText
+        };
+    }
+
+    // Helper method to decode Google's special Base64 string
+    private string DecodeBase64Url(string base64Url)
+    {
+        var base64 = base64Url.Replace('-', '+').Replace('_', '/');
+        switch (base64.Length % 4)
+        {
+            case 2: base64 += "=="; break;
+            case 3: base64 += "="; break;
+        }
+        var bytes = Convert.FromBase64String(base64);
+        return System.Text.Encoding.UTF8.GetString(bytes);
+    }
 }

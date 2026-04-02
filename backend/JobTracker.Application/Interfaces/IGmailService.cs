@@ -11,4 +11,6 @@ public interface IGmailService
     Task<bool> ExchangeCodeForTokenAsync(int userId, string code);
 
     Task<List<EmailMessageResponse>> GetRecentJobEmailsAsync(int userId, int maxResults = 10);
+
+    Task<EmailFullResponse?> GetEmailBodyAsync(int userId, string messageId);
 }

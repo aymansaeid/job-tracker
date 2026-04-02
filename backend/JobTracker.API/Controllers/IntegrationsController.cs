@@ -57,4 +57,17 @@ public class IntegrationsController : ControllerBase
 
         return Ok(emails);
     }
+
+    [Authorize]
+    [HttpGet("google/emails/{messageId}")]
+    public async Task<IActionResult> GetEmailBody(string messageId)
+    {
+        var userId = User.GetUserId();
+        var email = await _gmailService.GetEmailBodyAsync(userId, messageId);
+
+        if (email == null)
+            return NotFound("Email not found or Gmail not connected.");
+
+        return Ok(email);
+    }
 }
