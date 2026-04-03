@@ -13,4 +13,6 @@ public interface IGmailService
     Task<List<EmailMessageResponse>> GetRecentJobEmailsAsync(int userId, int maxResults = 10);
 
     Task<EmailFullResponse?> GetEmailBodyAsync(int userId, string messageId);
+
+    Task<bool> DisconnectAsync(int userId);
 }

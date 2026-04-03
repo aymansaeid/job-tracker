@@ -209,4 +209,18 @@ public class GmailService : IGmailService
         var bytes = Convert.FromBase64String(base64);
         return System.Text.Encoding.UTF8.GetString(bytes);
     }
+
+    public async Task<bool> DisconnectAsync(int userId)
+    {
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null || string.IsNullOrWhiteSpace(user.GoogleRefreshToken))
+            return false;
+
+        // Clear the token from our database
+        user.GoogleRefreshToken = null;
+        await _context.SaveChangesAsync();
+
+        return true;
+    }
+
 }

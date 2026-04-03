@@ -73,4 +73,30 @@ public class UserService : IUserService
             })
             .FirstOrDefaultAsync();
     }
+
+    public async Task<bool> UpdateProfileAsync(int userId, UpdateProfileRequest request)
+    {
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null) return false;
+
+        user.FullName = request.FullName;
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<bool> ChangePasswordAsync(int userId, ChangePasswordRequest request)
+    {
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null) return false;
+
+        // Verify old password
+        if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.PasswordHash))
+            return false;
+
+        // Hash and save new password
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+        await _context.SaveChangesAsync();
+
+        return true;
+    }
 }

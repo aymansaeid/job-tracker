@@ -70,4 +70,15 @@ public class IntegrationsController : ControllerBase
 
         return Ok(email);
     }
+
+    [HttpDelete("google")]
+    public async Task<IActionResult> Disconnect()
+    {
+        var userId = User.GetUserId();
+        var result = await _gmailService.DisconnectAsync(userId);
+
+        if (!result) return BadRequest("Gmail is not currently connected.");
+
+        return Ok(new { Message = "Gmail disconnected successfully." });
+    }
 }
