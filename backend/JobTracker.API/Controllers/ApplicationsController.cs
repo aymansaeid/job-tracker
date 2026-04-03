@@ -46,13 +46,6 @@ public class ApplicationsController : ControllerBase
         return Ok(result);
     }
 
-    [HttpGet("token-check")]
-    public IActionResult GetMyApplications()
-    {
-        var userId = User.GetUserId();
-        return Ok($"User ID from token: {userId}");
-    }
-
     [HttpGet]
     public async Task<IActionResult> GetMine([FromQuery] GetJobApplicationsRequest request)
     {
@@ -117,15 +110,4 @@ public class ApplicationsController : ControllerBase
         return NoContent();
     }
 
-    [HttpPost("{id:int}/emails")]
-    public async Task<IActionResult> LinkEmail(int id, LinkEmailRequest request)
-    {
-        var userId = User.GetUserId();
-        var result = await _jobApplicationService.LinkEmailAsync(userId, id, request);
-
-        if (!result)
-            return NotFound("Job application not found.");
-
-        return Ok(new { Message = "Email linked successfully." });
-    }
 }

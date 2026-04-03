@@ -286,35 +286,6 @@ public class JobApplicationService : IJobApplicationService
         return true;
     }
 
-    public async Task<bool> LinkEmailAsync(int userId, int applicationId, LinkEmailRequest request)
-    {
-        // 1. Verify the user owns this job application
-        var applicationExists = await _context.JobApplications
-            .AnyAsync(x => x.Id == applicationId && x.UserId == userId);
 
-        if (!applicationExists)
-            return false;
-
-        // 2. Check if this exact email is already linked
-        var emailAlreadyLinked = await _context.JobEmails
-            .AnyAsync(x => x.MessageId == request.MessageId);
-
-        if (emailAlreadyLinked)
-            return true; // Return true because the desired end state (email is linked) is already met
-
-        // 3. Save the link
-        var jobEmail = new JobEmail
-        {
-            JobApplicationId = applicationId,
-            MessageId = request.MessageId,
-            Subject = request.Subject,
-            DateReceived = request.DateReceived
-        };
-
-        _context.JobEmails.Add(jobEmail);
-        await _context.SaveChangesAsync();
-
-        return true;
-    }
 
 }

@@ -48,15 +48,6 @@ public class IntegrationsController : ControllerBase
         return Ok(new { Message = "Gmail connected successfully! You can close this window." });
     }
 
-    [Authorize]
-    [HttpGet("google/emails/recent")]
-    public async Task<IActionResult> GetRecentJobEmails([FromQuery] int limit = 10)
-    {
-        var userId = User.GetUserId();
-        var emails = await _gmailService.GetRecentJobEmailsAsync(userId, limit);
-
-        return Ok(emails);
-    }
 
     [Authorize]
     [HttpGet("google/emails/{messageId}")]
