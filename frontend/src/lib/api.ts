@@ -1,7 +1,7 @@
 import axios from 'axios'
 import type { AxiosError, InternalAxiosRequestConfig } from 'axios'
 
-const BASE_URL = import.meta.env.VITE_API_URL ?? 'https://localhost:7001/api'
+const BASE_URL = import.meta.env.VITE_API_URL ?? 'https://localhost:7266/api'
 
 export const api = axios.create({
   baseURL: BASE_URL,
@@ -41,9 +41,9 @@ api.interceptors.response.use(
 
 export const authApi = {
   login: (data: { email: string; password: string }) =>
-    api.post('/auth/login', data),
+    api.post('/Auth/login', data),
   register: (data: { fullName: string; email: string; password: string }) =>
-    api.post('/auth/register', data),
+    api.post('/Auth/register', data),
 }
 
 // ── Applications ──────────────────────────────────────────────
