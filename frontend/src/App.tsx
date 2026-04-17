@@ -7,6 +7,7 @@ import LandingPage  from './pages/LandingPage'
 import LoginPage    from './pages/auth/LoginPage'
 import RegisterPage from './pages/auth/RegisterPage'
 import DashboardPage from './pages/app/DashboardPage'
+import ApplicationsPage from './pages/app/ApplicationsPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -32,7 +33,6 @@ function RequireGuest({ children }: { children: React.ReactNode }) {
 }
 
 function KanbanPage()       { return <p className="text-slate-400">Kanban — coming soon</p> }
-function ApplicationsPage() { return <p className="text-slate-400">Applications — coming soon</p> }
 function AIPage()           { return <p className="text-slate-400">AI Suggestions — coming soon</p> }
 function SettingsPage()     { return <p className="text-slate-400">Settings — coming soon</p> }
 

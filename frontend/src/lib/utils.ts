@@ -1,6 +1,7 @@
 import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import { ApplicationStage } from '../types'
+import { EmploymentType } from '../types'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -37,6 +38,14 @@ export const STAGE_ORDER: ApplicationStage[] = [
   ApplicationStage.Offer,
   ApplicationStage.Rejected,
 ]
+
+// Employment type number → display label
+export const EMPLOYMENT_LABEL: Record<EmploymentType, string> = {
+  [EmploymentType.FullTime]:   'Full-time',
+  [EmploymentType.PartTime]:   'Part-time',
+  [EmploymentType.Contract]:   'Contract',
+  [EmploymentType.Internship]: 'Internship',
+}
 
 // "2 days ago" relative time
 export function timeAgo(dateString: string): string {
