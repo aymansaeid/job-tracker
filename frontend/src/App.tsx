@@ -8,7 +8,7 @@ import LoginPage    from './pages/auth/LoginPage'
 import RegisterPage from './pages/auth/RegisterPage'
 import DashboardPage from './pages/app/DashboardPage'
 import ApplicationsPage from './pages/app/ApplicationsPage'
-
+import KanbanPage from './pages/app/KanbanPage'
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -32,7 +32,6 @@ function RequireGuest({ children }: { children: React.ReactNode }) {
   return isAuthenticated ? <Navigate to="/app/dashboard" replace /> : <>{children}</>
 }
 
-function KanbanPage()       { return <p className="text-slate-400">Kanban — coming soon</p> }
 function AIPage()           { return <p className="text-slate-400">AI Suggestions — coming soon</p> }
 function SettingsPage()     { return <p className="text-slate-400">Settings — coming soon</p> }
 

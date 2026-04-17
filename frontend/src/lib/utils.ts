@@ -10,22 +10,22 @@ export function cn(...inputs: ClassValue[]) {
 // Stage number → display label
 export const STAGE_LABEL: Record<ApplicationStage, string> = {
   [ApplicationStage.Applied]:   'Applied',
-  [ApplicationStage.Screening]: 'Screening',
+  [ApplicationStage.InReview]: 'In Review',
   [ApplicationStage.Interview]: 'Interview',
   [ApplicationStage.Offer]:     'Offer',
   [ApplicationStage.Rejected]:  'Rejected',
-  [ApplicationStage.Withdrawn]: 'Withdrawn',
+  [ApplicationStage.Ghosted]: 'Ghosted',
 }
 
 // Stage number → badge color classes
 export function stageColor(stage: ApplicationStage): string {
   const map: Record<ApplicationStage, string> = {
     [ApplicationStage.Applied]:   'bg-blue-500/20 text-blue-300 border-blue-500/30',
-    [ApplicationStage.Screening]: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30',
+    [ApplicationStage.InReview]: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30',
     [ApplicationStage.Interview]: 'bg-violet-500/20 text-violet-300 border-violet-500/30',
     [ApplicationStage.Offer]:     'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
     [ApplicationStage.Rejected]:  'bg-red-500/20 text-red-300 border-red-500/30',
-    [ApplicationStage.Withdrawn]: 'bg-slate-500/20 text-slate-400 border-slate-500/30',
+    [ApplicationStage.Ghosted]: 'bg-slate-500/20 text-slate-400 border-slate-500/30',
   }
   return map[stage]
 }
@@ -33,10 +33,11 @@ export function stageColor(stage: ApplicationStage): string {
 // Ordered stages for Kanban columns
 export const STAGE_ORDER: ApplicationStage[] = [
   ApplicationStage.Applied,
-  ApplicationStage.Screening,
+  ApplicationStage.InReview,
   ApplicationStage.Interview,
   ApplicationStage.Offer,
   ApplicationStage.Rejected,
+  ApplicationStage.Ghosted
 ]
 
 // Employment type number → display label

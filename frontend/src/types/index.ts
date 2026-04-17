@@ -26,11 +26,11 @@ export interface RegisterRequest {
 
 export const ApplicationStage = {
   Applied:   0,
-  Screening: 1,
+  InReview:  1,
   Interview: 2,
   Offer:     3,
   Rejected:  4,
-  Withdrawn: 5,
+  Ghosted:   5,
 } as const
 export type ApplicationStage = typeof ApplicationStage[keyof typeof ApplicationStage]
 
