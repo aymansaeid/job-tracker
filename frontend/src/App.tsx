@@ -6,6 +6,7 @@ import AppLayout    from './components/layout/AppLayout'
 import LandingPage  from './pages/LandingPage'
 import LoginPage    from './pages/auth/LoginPage'
 import RegisterPage from './pages/auth/RegisterPage'
+import DashboardPage from './pages/app/DashboardPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -30,8 +31,6 @@ function RequireGuest({ children }: { children: React.ReactNode }) {
   return isAuthenticated ? <Navigate to="/app/dashboard" replace /> : <>{children}</>
 }
 
-// Placeholder pages — we build these one by one next
-function DashboardPage()    { return <p className="text-slate-400">Dashboard — coming next 👋</p> }
 function KanbanPage()       { return <p className="text-slate-400">Kanban — coming soon</p> }
 function ApplicationsPage() { return <p className="text-slate-400">Applications — coming soon</p> }
 function AIPage()           { return <p className="text-slate-400">AI Suggestions — coming soon</p> }

@@ -1,5 +1,3 @@
-// Strict source of truth — matches the .NET backend exactly
-
 // ── Auth ─────────────────────────────────────────────────────
 
 export interface User {
@@ -24,28 +22,32 @@ export interface RegisterRequest {
   password: string
 }
 
-// ── Enums (backend serializes these as integers) ─────────────
+// ── Enums (integers — DO NOT use strings) ────────────────────
 
 export const ApplicationStage = {
-  Applied: 0,
+  Applied:   0,
   Screening: 1,
   Interview: 2,
-  Offer: 3,
-  Rejected: 4,
+  Offer:     3,
+  Rejected:  4,
   Withdrawn: 5,
-} as const;
+} as const
+export type ApplicationStage = typeof ApplicationStage[keyof typeof ApplicationStage]
 
-export type ApplicationStage =
-  typeof ApplicationStage[keyof typeof ApplicationStage];
+export const EmploymentType = {
+  FullTime:  0,
+  PartTime:  1,
+  Contract:  2,
+  Internship:3,
+} as const
+export type EmploymentType = typeof EmploymentType[keyof typeof EmploymentType]
 
 export const SuggestionStatus = {
-  Pending: 0,
+  Pending:  0,
   Approved: 1,
   Rejected: 2,
-} as const;
-
-export type SuggestionStatus =
-  typeof SuggestionStatus[keyof typeof SuggestionStatus];
+} as const
+export type SuggestionStatus = typeof SuggestionStatus[keyof typeof SuggestionStatus]
 
 // ── Core Entities ─────────────────────────────────────────────
 
@@ -56,7 +58,7 @@ export interface JobApplication {
   jobTitle?: string
   jobUrl?: string
   location?: string
-  employmentType: number
+  employmentType: EmploymentType
   currentStage: ApplicationStage
   notes?: string
   isArchived: boolean
@@ -69,8 +71,24 @@ export interface CreateApplicationRequest {
   jobTitle: string
   jobUrl?: string
   location?: string
-  currentStage: ApplicationStage
+  employmentType: EmploymentType
+  appliedAt: string
   notes?: string
+}
+
+export interface UpdateApplicationRequest {
+  companyName: string
+  jobTitle: string
+  jobUrl?: string
+  location?: string
+  employmentType: EmploymentType
+  appliedAt: string
+  notes?: string
+}
+
+export interface ChangeStageRequest {
+  stage: ApplicationStage
+  comment?: string
 }
 
 // ── History ───────────────────────────────────────────────────
@@ -88,8 +106,12 @@ export interface HistoryEvent {
 export interface DashboardStats {
   totalApplications: number
   activeApplications: number
-  interviewsScheduled: number
-  rejectedApplications: number
+  appliedCount: number
+  inReviewCount: number
+  interviewCount: number
+  offerCount: number
+  rejectedCount: number
+  ghostedCount: number
 }
 
 // ── AI Suggestions ────────────────────────────────────────────
@@ -106,7 +128,30 @@ export interface AISuggestion {
   createdAt: string
 }
 
-// ── General API Error ─────────────────────────────────────────
+// ── User Profile ──────────────────────────────────────────────
+
+export interface UpdateProfileRequest {
+  fullName: string
+}
+
+export interface ChangePasswordRequest {
+  currentPassword: string
+  newPassword: string
+}
+
+// ── Paginated Response ────────────────────────────────────────
+
+export interface PaginatedResponse<T> {
+  items: T[]
+  totalCount: number
+  pageNumber: number
+  pageSize: number
+  totalPages: number
+  hasNextPage: boolean
+  hasPreviousPage: boolean
+}
+
+// ── API Error ─────────────────────────────────────────────────
 
 export interface ApiError {
   message: string
