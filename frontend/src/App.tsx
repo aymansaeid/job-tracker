@@ -9,6 +9,8 @@ import RegisterPage from './pages/auth/RegisterPage'
 import DashboardPage from './pages/app/DashboardPage'
 import ApplicationsPage from './pages/app/ApplicationsPage'
 import KanbanPage from './pages/app/KanbanPage'
+import ApplicationDetailPage from './pages/app/ApplicationDetailPage'
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -53,6 +55,7 @@ function AnimatedRoutes() {
           <Route path="dashboard"       element={<DashboardPage />} />
           <Route path="kanban"          element={<KanbanPage />} />
           <Route path="applications"    element={<ApplicationsPage />} />
+          <Route path="applications/:id" element={<ApplicationDetailPage />} />
           <Route path="ai"              element={<AIPage />} />
           <Route path="settings"        element={<SettingsPage />} />
         </Route>
