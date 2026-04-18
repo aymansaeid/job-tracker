@@ -10,6 +10,8 @@ import DashboardPage from './pages/app/DashboardPage'
 import ApplicationsPage from './pages/app/ApplicationsPage'
 import KanbanPage from './pages/app/KanbanPage'
 import ApplicationDetailPage from './pages/app/ApplicationDetailPage'
+import SettingsPage from './pages/app/SettingsPage'
+
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -35,7 +37,6 @@ function RequireGuest({ children }: { children: React.ReactNode }) {
 }
 
 function AIPage()           { return <p className="text-slate-400">AI Suggestions — coming soon</p> }
-function SettingsPage()     { return <p className="text-slate-400">Settings — coming soon</p> }
 
 function AnimatedRoutes() {
   const location = useLocation()
