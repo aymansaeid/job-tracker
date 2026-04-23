@@ -10,6 +10,7 @@ import { authApi } from '../../lib/api'
 import { useAuthStore } from '../../store/authStore'
 import type { AuthResponse } from '../../types'
 import type { Variants } from "framer-motion"
+import { decodeJWT } from '../../lib/utils'
 
 const schema = z.object({
   fullName: z.string().min(2, 'Name must be at least 2 characters'),
@@ -65,22 +66,33 @@ export default function RegisterPage() {
   const { register, handleSubmit, formState: { errors, isSubmitting } } =
     useForm<FormData>({ resolver: zodResolver(schema) })
 
-  const onSubmit = async (data: FormData) => {
-    setServerErr(null)
-    try {
-      const res = await authApi.register({
-        fullName: data.fullName,
-        email:    data.email,
-        password: data.password,
-      })
-      const { token } = res.data as AuthResponse
-      setAuth({ id: 0, email: data.email, fullName: data.fullName }, token)
-      navigate('/app/dashboard', { replace: true })
-    } catch (err) {
-      const e = err as AxiosError<{ message?: string }>
-      setServerErr(e.response?.data?.message ?? 'Something went wrong. Please try again.')
-    }
+ const onSubmit = async (data: FormData) => {
+  setServerErr(null)
+  try {
+    const res = await authApi.register({
+      fullName: data.fullName,
+      email:    data.email,
+      password: data.password,
+    })
+    const { token } = res.data as AuthResponse
+
+    const decoded = decodeJWT(token)
+    const userId  = (decoded?.['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier']
+      ?? decoded?.sub
+      ?? decoded?.nameid
+      ?? decoded?.id
+      ?? 0) as number
+
+    setAuth(
+      { id: Number(userId), email: data.email, fullName: data.fullName },
+      token,
+    )
+    navigate('/app/dashboard', { replace: true })
+  } catch (err) {
+    const e = err as AxiosError<{ message?: string }>
+    setServerErr(e.response?.data?.message ?? 'Something went wrong. Please try again.')
   }
+}
 
   return (
     <motion.div

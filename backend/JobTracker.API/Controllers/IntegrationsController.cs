@@ -43,9 +43,20 @@ public class IntegrationsController : ControllerBase
         if (!success)
             return BadRequest("Failed to connect Gmail account.");
 
-        // In a real app, you would redirect back to your React frontend here
-        // e.g., return Redirect("http://localhost:5173/settings?integration=success");
-        return Ok(new { Message = "Gmail connected successfully! You can close this window." });
+        // Return a tiny HTML script that tells the React app it succeeded and closes the popup
+        var html = @"
+            <html>
+                <body>
+                    <script>
+                        // Tell the React parent window we succeeded
+                        window.opener.postMessage('google_auth_success', '*');
+                        // Automatically close this popup
+                        window.close();
+                    </script>
+                </body>
+            </html>";
+
+        return Content(html, "text/html");
     }
 
 

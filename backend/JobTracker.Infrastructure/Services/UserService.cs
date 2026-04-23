@@ -69,7 +69,8 @@ public class UserService : IUserService
             {
                 Id = x.Id,
                 FullName = x.FullName,
-                Email = x.Email
+                Email = x.Email,
+                GoogleRefreshToken = x.GoogleRefreshToken
             })
             .FirstOrDefaultAsync();
     }

@@ -58,10 +58,10 @@ export const authApi = {
 
 export const applicationsApi = {
   getAll: (params?: {
-    PageNumber?:      number
-    PageSize?:        number
-    SearchTerm?:      string
-    Stage?:           number
+    PageNumber?: number
+    PageSize?: number
+    SearchTerm?: string
+    Stage?: number
     IncludeArchived?: boolean
   }) => api.get('/Applications', { params }),
 
@@ -97,10 +97,10 @@ export const applicationsApi = {
 // POST /api/Suggestions/{id}/reject
 
 export const suggestionsApi = {
-  sync:       ()           => api.post('/Suggestions/sync'),
-  getPending: ()           => api.get('/Suggestions/pending'),
-  approve:    (id: number) => api.post(`/Suggestions/${id}/approve`),
-  reject:     (id: number) => api.post(`/Suggestions/${id}/reject`),
+  sync: () => api.post('/Suggestions/sync'),
+  getPending: () => api.get('/Suggestions/pending'),
+  approve: (id: number) => api.post(`/Suggestions/${id}/approve`),
+  reject: (id: number) => api.post(`/Suggestions/${id}/reject`),
 }
 
 // ── Integrations ──────────────────────────────────────────────
@@ -109,7 +109,7 @@ export const suggestionsApi = {
 
 export const integrationsApi = {
   getGoogleAuthUrl: () => api.get('/Integrations/google/auth-url'),
-  disconnect:       () => api.delete('/Integrations/google/disconnect'),
+  disconnect: () => api.delete('/Integrations/google'),
 }
 
 // ── Users ─────────────────────────────────────────────────────
@@ -117,8 +117,12 @@ export const integrationsApi = {
 // PUT /api/Users/password
 
 export const usersApi = {
-  updateProfile:  (data: { fullName: string }) =>
+  getProfile: (id: number) =>
+    api.get(`/Users/${id}`),
+
+  updateProfile: (data: { fullName: string }) =>
     api.put('/Users/profile', data),
+
   changePassword: (data: { currentPassword: string; newPassword: string }) =>
     api.put('/Users/password', data),
 }

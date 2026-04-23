@@ -11,9 +11,13 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    headers: {
+      "Cross-Origin-Opener-Policy": "unsafe-none",
+      "Cross-Origin-Embedder-Policy": "unsafe-none",
+    },
     proxy: {
       '/api': {
-        target: 'https://localhost:7001',
+        target: 'https://localhost:7266',
         changeOrigin: true,
         secure: false,
       },

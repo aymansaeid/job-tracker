@@ -1,8 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Kanban, ListTodo, Settings,
-  Sparkles, LogOut, ChevronLeft, ChevronRight,
-  Brain
+  Sparkles, LogOut, ChevronLeft, ChevronRight,  Folder
 } from 'lucide-react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
@@ -13,7 +12,7 @@ const NAV_ITEMS = [
   { to: '/app/dashboard',    icon: LayoutDashboard, label: 'Dashboard'    },
   { to: '/app/kanban',       icon: Kanban,          label: 'Kanban Board' },
   { to: '/app/applications', icon: ListTodo,        label: 'Applications' },
-  { to: '/app/ai',           icon: Brain,           label: 'AI Suggestions' },
+  { to: '/app/Folders',           icon: Folder,           label: 'My Folders' },
   { to: '/app/settings',     icon: Settings,        label: 'Settings'     },
 ]
 

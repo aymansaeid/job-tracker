@@ -10,6 +10,7 @@ import { authApi } from '../../lib/api'
 import { useAuthStore } from '../../store/authStore'
 import type { AuthResponse } from '../../types'
 import type { Variants } from "framer-motion"
+import { decodeJWT } from '../../lib/utils'
 
 const schema = z.object({
   email:    z.string().email('Enter a valid email'),
@@ -41,18 +42,29 @@ export default function LoginPage() {
     useForm<FormData>({ resolver: zodResolver(schema) })
 
   const onSubmit = async (data: FormData) => {
-    setServerErr(null)
-    try {
-      const res = await authApi.login(data)
-      const { token } = res.data as AuthResponse
-      // Backend only returns token — we store a minimal user object
-      setAuth({ id: 0, email: data.email, fullName: '' }, token)
-      navigate('/app/dashboard', { replace: true })
-    } catch (err) {
-      const e = err as AxiosError<{ message?: string }>
-      setServerErr(e.response?.data?.message ?? 'Invalid email or password.')
-    }
+  setServerErr(null)
+  try {
+    const res = await authApi.login(data)
+    const { token } = res.data as AuthResponse
+
+    // Decode real user ID from JWT instead of hardcoding 0
+    const decoded = decodeJWT(token)
+    const userId  = (decoded?.['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier']
+      ?? decoded?.sub
+      ?? decoded?.nameid
+      ?? decoded?.id
+      ?? 0) as number
+
+    setAuth(
+      { id: Number(userId), email: data.email, fullName: '' },
+      token,
+    )
+    navigate('/app/dashboard', { replace: true })
+  } catch (err) {
+    const e = err as AxiosError<{ message?: string }>
+    setServerErr(e.response?.data?.message ?? 'Invalid email or password.')
   }
+}
 
   return (
     <motion.div

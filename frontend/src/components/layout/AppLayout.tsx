@@ -8,7 +8,7 @@ const TITLES: Record<string, string> = {
   '/app/dashboard':    'Dashboard',
   '/app/kanban':       'Kanban Board',
   '/app/applications': 'Applications',
-  '/app/ai':           'AI Suggestions',
+  '/app/Folders':           'My Folders',
   '/app/settings':     'Settings',
 }
 

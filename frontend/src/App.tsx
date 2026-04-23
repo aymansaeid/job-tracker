@@ -36,7 +36,7 @@ function RequireGuest({ children }: { children: React.ReactNode }) {
   return isAuthenticated ? <Navigate to="/app/dashboard" replace /> : <>{children}</>
 }
 
-function AIPage()           { return <p className="text-slate-400">AI Suggestions — coming soon</p> }
+function MyFolderse()           { return <p className="text-slate-400">coming soon</p> }
 
 function AnimatedRoutes() {
   const location = useLocation()
@@ -57,7 +57,7 @@ function AnimatedRoutes() {
           <Route path="kanban"          element={<KanbanPage />} />
           <Route path="applications"    element={<ApplicationsPage />} />
           <Route path="applications/:id" element={<ApplicationDetailPage />} />
-          <Route path="ai"              element={<AIPage />} />
+          <Route path="Folders"              element={<MyFolderse />} />
           <Route path="settings"        element={<SettingsPage />} />
         </Route>
 
