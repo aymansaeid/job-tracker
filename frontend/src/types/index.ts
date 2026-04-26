@@ -126,6 +126,8 @@ export interface AISuggestion {
   suggestedInterviewDate?: string
   status: SuggestionStatus
   createdAt: string
+  aiReasoning : string
+  actionUrl : string
 }
 
 // ── User Profile ──────────────────────────────────────────────

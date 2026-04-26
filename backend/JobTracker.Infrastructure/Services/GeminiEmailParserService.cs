@@ -21,7 +21,7 @@ public class GeminiEmailParserService : IEmailParserService
 
     public async Task<ParsedEmailResult> ParseEmailAsync(string subject, string plainTextBody)
     {
-        var endpoint = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={_apiKey}";
+        var endpoint = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={_apiKey}";
 
         // 1. We tell the AI exactly how to behave and what JSON structure to return
         var systemPrompt = @"You are an AI assistant that extracts job application updates from emails. 
@@ -45,21 +45,17 @@ Do not include markdown tags like ```json. Just return the raw JSON object.";
             {
                 new
                 {
-                    parts = new[]
-                    {
-                        new { text = systemPrompt + "\n\n" + userPrompt }
-                    }
+                    parts = new[] { new { text = systemPrompt + "\n\n" + userPrompt } }
                 }
             },
             generationConfig = new
             {
-                temperature = 0.1, // Low temperature so it doesn't get overly creative
-                response_mime_type = "application/json" // Force JSON output!
+                temperature = 0.1,
+                responseMimeType = "application/json" // FIX: Must be camelCase!
             }
         };
-
-        var content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
-
+        var jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+        var content = new StringContent(JsonSerializer.Serialize(requestBody, jsonOptions), Encoding.UTF8, "application/json");
         try
         {
             // 3. Call the AI

@@ -60,8 +60,6 @@ public class SuggestionService : ISuggestionService
                     CreatedAt = DateTime.UtcNow,
                     AiReasoning = aiResult.AiReasoning,
                     ActionUrl = aiResult.ActionUrl
-
-
                 };
 
                 _context.JobUpdateSuggestions.Add(suggestion);
@@ -92,7 +90,9 @@ public class SuggestionService : ISuggestionService
                 SuggestedStage = x.SuggestedStage,
                 SuggestedInterviewDate = x.SuggestedInterviewDate,
                 Status = x.Status,
-                CreatedAt = x.CreatedAt
+                CreatedAt = x.CreatedAt,
+                AiReasoning = x.AiReasoning,
+                ActionUrl = x.ActionUrl
             })
             .ToListAsync();
     }
@@ -111,6 +111,8 @@ public class SuggestionService : ISuggestionService
         // 2. Try to find an existing Job Application for this company
         var jobApp = await _context.JobApplications
             .FirstOrDefaultAsync(x => x.UserId == userId && x.CompanyName.ToLower() == suggestion.CompanyName.ToLower());
+
+        bool isNew = false;
 
         if (jobApp != null)
         {
@@ -133,6 +135,7 @@ public class SuggestionService : ISuggestionService
         else
         {
             // CREATE NEW JOB APPLICATION
+            isNew = true;
             jobApp = new JobApplication
             {
                 UserId = userId,
@@ -140,9 +143,38 @@ public class SuggestionService : ISuggestionService
                 JobTitle = string.IsNullOrWhiteSpace(suggestion.JobTitle) ? "Unknown Role" : suggestion.JobTitle,
                 CurrentStage = suggestion.SuggestedStage ?? ApplicationStage.Applied,
                 AppliedAt = DateTime.UtcNow,
-                LastUpdatedAt = DateTime.UtcNow
+                LastUpdatedAt = DateTime.UtcNow,
+                Notes = "" // Initialize notes
             };
             _context.JobApplications.Add(jobApp);
+        }
+
+        // Preserve the AI extracted link into the job notes! ──
+        if (!string.IsNullOrWhiteSpace(suggestion.ActionUrl))
+        {
+            var noteAddition = $"\n[AI Extracted Link]: {suggestion.ActionUrl}";
+            jobApp.Notes = string.IsNullOrWhiteSpace(jobApp.Notes)
+                ? noteAddition.Trim()
+                : jobApp.Notes + noteAddition;
+        }
+
+        // If it's a brand new app, we MUST save here first so SQL Server generates an ID for the JobEmails table to link to!
+        if (isNew)
+        {
+            await _context.SaveChangesAsync();
+        }
+
+        // Actually link the email to the JobApplication! ──
+        bool emailAlreadyLinked = await _context.JobEmails.AnyAsync(e => e.MessageId == suggestion.MessageId);
+        if (!emailAlreadyLinked)
+        {
+            _context.JobEmails.Add(new JobEmail
+            {
+                JobApplicationId = jobApp.Id,
+                MessageId = suggestion.MessageId,
+                Subject = suggestion.EmailSubject,
+                DateReceived = suggestion.CreatedAt // Storing the time it was processed
+            });
         }
 
         await _context.SaveChangesAsync();
