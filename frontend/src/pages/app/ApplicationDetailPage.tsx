@@ -5,33 +5,33 @@ import { motion } from 'framer-motion'
 import { ArrowLeft } from 'lucide-react'
 import { applicationsApi } from '../../lib/api'
 import type {
-  JobApplication, HistoryEvent, ApplicationStage,
+  JobApplication, HistoryEvent, ApplicationStage, EmploymentType
 } from '../../types'
-import ApplicationDetail  from '../../components/jobs/ApplicationDetail'
-import HistoryTimeline    from '../../components/jobs/HistoryTimeline'
-import StageChanger       from '../../components/jobs/StageChanger'
-import ApplicationModal   from '../../components/jobs/ApplicationModal'
+import ApplicationDetail from '../../components/jobs/ApplicationDetail'
+import HistoryTimeline from '../../components/jobs/HistoryTimeline'
+import StageChanger from '../../components/jobs/StageChanger'
+import ApplicationModal from '../../components/jobs/ApplicationModal'
 import type { ApplicationFormData } from '../../components/jobs/ApplicationModal'
 
 export default function ApplicationDetailPage() {
-  const { id }       = useParams<{ id: string }>()
-  const appId        = Number(id)
-  const navigate     = useNavigate()
-  const queryClient  = useQueryClient()
+  const { id } = useParams<{ id: string }>()
+  const appId = Number(id)
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const [editOpen, setEditOpen] = useState(false)
 
   // ── Queries ───────────────────────────────────────────────
 
   const { data: app, isLoading: appLoading } = useQuery<JobApplication>({
     queryKey: ['application', appId],
-    queryFn:  () => applicationsApi.getById(appId).then(r => r.data),
-    enabled:  !!appId,
+    queryFn: () => applicationsApi.getById(appId).then(r => r.data),
+    enabled: !!appId,
   })
 
   const { data: history = [], isLoading: historyLoading } = useQuery<HistoryEvent[]>({
     queryKey: ['application-history', appId],
-    queryFn:  () => applicationsApi.getHistory(appId).then(r => r.data),
-    enabled:  !!appId,
+    queryFn: () => applicationsApi.getHistory(appId).then(r => r.data),
+    enabled: !!appId,
   })
 
   // ── Mutations ─────────────────────────────────────────────
@@ -40,11 +40,11 @@ export default function ApplicationDetailPage() {
     mutationFn: (stage: ApplicationStage) =>
       applicationsApi.changeStage(appId, { stage }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['application', appId]         })
+      queryClient.invalidateQueries({ queryKey: ['application', appId] })
       queryClient.invalidateQueries({ queryKey: ['application-history', appId] })
-      queryClient.invalidateQueries({ queryKey: ['applications']               })
-      queryClient.invalidateQueries({ queryKey: ['applications-kanban']        })
-      queryClient.invalidateQueries({ queryKey: ['stats']                      })
+      queryClient.invalidateQueries({ queryKey: ['applications'] })
+      queryClient.invalidateQueries({ queryKey: ['applications-kanban'] })
+      queryClient.invalidateQueries({ queryKey: ['stats'] })
     },
   })
 
@@ -52,7 +52,9 @@ export default function ApplicationDetailPage() {
     mutationFn: (data: unknown) => applicationsApi.update(appId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['application', appId] })
-      queryClient.invalidateQueries({ queryKey: ['applications']       })
+      queryClient.invalidateQueries({ queryKey: ['applications'] })
+      queryClient.invalidateQueries({ queryKey: ['stats'] })
+      queryClient.invalidateQueries({ queryKey: ['applications-kanban'] })
       setEditOpen(false)
     },
   })
@@ -61,7 +63,8 @@ export default function ApplicationDetailPage() {
     mutationFn: () => applicationsApi.delete(appId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['applications'] })
-      queryClient.invalidateQueries({ queryKey: ['stats']        })
+      queryClient.invalidateQueries({ queryKey: ['stats'] })
+      queryClient.invalidateQueries({ queryKey: ['applications-kanban'] })
       navigate('/app/applications', { replace: true })
     },
   })
@@ -70,7 +73,19 @@ export default function ApplicationDetailPage() {
     mutationFn: () => applicationsApi.archive(appId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['application', appId] })
-      queryClient.invalidateQueries({ queryKey: ['applications']       })
+      queryClient.invalidateQueries({ queryKey: ['applications'] })
+      queryClient.invalidateQueries({ queryKey: ['stats'] })
+      queryClient.invalidateQueries({ queryKey: ['applications-kanban'] })
+    },
+  })
+
+  const unarchiveMutation = useMutation({
+    mutationFn: () => applicationsApi.unarchive(appId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['application', appId] })
+      queryClient.invalidateQueries({ queryKey: ['applications'] })
+      queryClient.invalidateQueries({ queryKey: ['stats'] })
+      queryClient.invalidateQueries({ queryKey: ['applications-kanban'] })
     },
   })
 
@@ -78,14 +93,24 @@ export default function ApplicationDetailPage() {
 
   const handleUpdate = async (formData: ApplicationFormData) => {
     await updateMutation.mutateAsync({
-      companyName:    formData.companyName,
-      jobTitle:       formData.jobTitle,
-      jobUrl:         formData.jobUrl  || undefined,
-      location:       formData.location || undefined,
-      employmentType: Number(formData.employmentType),
-      appliedAt:      new Date(formData.appliedAt).toISOString(),
-      notes:          formData.notes   || undefined,
+      companyName: formData.companyName,
+      jobTitle: formData.jobTitle,
+      jobUrl: formData.jobUrl || undefined,
+      location: formData.location || undefined,
+      employmentType: Number(formData.employmentType) as EmploymentType, // FIX: Squashed TS bug
+      appliedAt: new Date(formData.appliedAt).toISOString(),
+      notes: formData.notes || undefined,
     })
+  }
+
+  // FIX 2: Create a smart toggle for the UI button
+  const handleToggleArchive = () => {
+    if (!app) return
+    if (app.isArchived) {
+      unarchiveMutation.mutate()
+    } else {
+      archiveMutation.mutate()
+    }
   }
 
   // ── Loading skeleton ──────────────────────────────────────
@@ -120,12 +145,12 @@ export default function ApplicationDetailPage() {
 
   return (
     <>
-      {/* Back button */}
+      {/* Back button (Hidden here because we added a sleek one directly inside ApplicationDetail, but keeping it as fallback if you prefer) */}
       <motion.button
         initial={{ opacity: 0, x: -8 }}
-        animate={{ opacity: 1, x: 0  }}
+        animate={{ opacity: 1, x: 0 }}
         onClick={() => navigate('/app/applications')}
-        className="flex items-center gap-2 text-sm text-slate-400 hover:text-slate-200 transition-colors mb-6 group"
+        className="flex items-center gap-2 text-sm text-slate-400 hover:text-slate-200 transition-colors mb-6 group hidden"
       >
         <ArrowLeft
           size={15}
@@ -135,7 +160,7 @@ export default function ApplicationDetailPage() {
       </motion.button>
 
       {/* Two-column layout */}
-      <div className="grid lg:grid-cols-[1fr_280px] gap-6 items-start">
+      <div className="grid lg:grid-cols-[1fr_280px] gap-6 items-start mt-2">
 
         {/* Left — details + timeline */}
         <div className="space-y-6">
@@ -143,7 +168,7 @@ export default function ApplicationDetailPage() {
             app={app}
             onEdit={() => setEditOpen(true)}
             onDelete={() => deleteMutation.mutate()}
-            onArchive={() => archiveMutation.mutate()}
+            onArchive={handleToggleArchive} // FIX 3: Pass the smart toggle down!
           />
 
           <div className="glass rounded-2xl border border-white/10 p-6">

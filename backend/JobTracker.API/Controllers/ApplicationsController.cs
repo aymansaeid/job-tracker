@@ -90,6 +90,18 @@ public class ApplicationsController : ControllerBase
         return NoContent();
     }
 
+    [HttpPatch("{id:int}/unarchive")]
+    public async Task<IActionResult> UnArchive(int id)
+    {
+        var userId = User.GetUserId();
+        var result = await _jobApplicationService.UnArchiveAsync(userId, id);
+
+        if (!result)
+            return NotFound();
+
+        return NoContent();
+    }
+
     [HttpGet("{id:int}/history")]
     public async Task<IActionResult> GetHistory(int id)
     {

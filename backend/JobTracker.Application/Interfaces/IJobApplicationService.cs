@@ -11,6 +11,7 @@ public interface IJobApplicationService
     Task<JobApplicationResponse?> UpdateAsync(int userId, int id, UpdateJobApplicationRequest request);
     Task<JobApplicationResponse?> ChangeStageAsync(int userId, int id, ChangeApplicationStageRequest request);
     Task<bool> ArchiveAsync(int userId, int id);
+    Task<bool> UnArchiveAsync(int userId, int id);
     Task<List<ApplicationStageHistoryResponse>> GetStageHistoryAsync(int userId, int applicationId);
 
     Task<DashboardStatsResponse> GetDashboardStatsAsync(int userId);

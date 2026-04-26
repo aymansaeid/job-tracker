@@ -33,7 +33,6 @@ export function stageColor(stage: ApplicationStage): string {
 // Ordered stages for Kanban columns
 export const STAGE_ORDER: ApplicationStage[] = [
   ApplicationStage.Applied,
-  ApplicationStage.InReview,
   ApplicationStage.Interview,
   ApplicationStage.Offer,
   ApplicationStage.Rejected,

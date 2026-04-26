@@ -195,6 +195,21 @@ public class JobApplicationService : IJobApplicationService
         return true;
     }
 
+    public async Task<bool> UnArchiveAsync(int userId, int id)
+    {
+        var application = await _context.JobApplications
+            .FirstOrDefaultAsync(x => x.Id == id && x.UserId == userId);
+
+        if (application is null)
+            return false;
+
+        application.IsArchived = false;
+        application.LastUpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
     public async Task<List<ApplicationStageHistoryResponse>> GetStageHistoryAsync(int userId, int applicationId)
     {
         var ownsApplication = await _context.JobApplications

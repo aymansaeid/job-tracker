@@ -14,7 +14,7 @@ import KanbanColumn from './KanbanColumn'
 import KanbanCard   from './KanbanCard'
 
 interface Props {
-  applications: JobApplication[]
+  applications:  JobApplication[]
   onStageChange: (appId: number, newStage: ApplicationStage) => void
 }
 
@@ -23,8 +23,8 @@ export default function KanbanBoard({ applications, onStageChange }: Props) {
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      // Require 8px movement before drag starts — prevents accidental drags
-      activationConstraint: { distance: 8 },
+      // 5px threshold — short enough to feel responsive, prevents accidental drags on clicks
+      activationConstraint: { distance: 5 },
     }),
   )
 
@@ -36,19 +36,18 @@ export default function KanbanBoard({ applications, onStageChange }: Props) {
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
     setActiveApp(null)
-
     if (!over) return
 
-    const appId = active.id as number
+    const appId  = active.id as number
     const overId = over.id
 
     let newStage: ApplicationStage | null = null
 
-    // SAFE CHECK: Did they drop it directly on a column? (e.g., 'col-1')
+    // Dropped on a column droppable (id format: 'col-{stage}')
     if (typeof overId === 'string' && overId.startsWith('col-')) {
       newStage = parseInt(overId.replace('col-', '')) as ApplicationStage
     } else {
-      // SAFE CHECK: Dropped on another card — find that card's stage
+      // Dropped on another card — use that card's stage
       const targetApp = applications.find(a => a.id === overId)
       if (targetApp) newStage = targetApp.currentStage
     }
@@ -58,13 +57,12 @@ export default function KanbanBoard({ applications, onStageChange }: Props) {
     const draggedApp = applications.find(a => a.id === appId)
     if (!draggedApp) return
 
-    // Only update if stage actually changed
     if (draggedApp.currentStage !== newStage) {
       onStageChange(appId, newStage)
     }
   }
 
-  // Group applications by stage using our new Ghosted/InReview enum mapping
+  // Group by stage, exclude archived
   const byStage = STAGE_ORDER.reduce<Record<number, JobApplication[]>>(
     (acc, stage) => {
       acc[stage] = applications.filter(
@@ -81,8 +79,7 @@ export default function KanbanBoard({ applications, onStageChange }: Props) {
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      {/* Horizontal scroll container */}
-      <div className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6">
+      <div className="flex gap-3 overflow-x-auto pb-6 -mx-6 px-6 min-h-[calc(100vh-200px)]">
         {STAGE_ORDER.map(stage => (
           <KanbanColumn
             key={stage}
@@ -92,8 +89,7 @@ export default function KanbanBoard({ applications, onStageChange }: Props) {
         ))}
       </div>
 
-      {/* Drag overlay — rendered on top of everything while dragging */}
-      <DragOverlay dropAnimation={{ duration: 200, easing: 'ease' }}>
+      <DragOverlay dropAnimation={{ duration: 180, easing: 'ease-out' }}>
         {activeApp && <KanbanCard app={activeApp} overlay />}
       </DragOverlay>
     </DndContext>

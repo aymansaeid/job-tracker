@@ -83,6 +83,9 @@ export const applicationsApi = {
   archive: (id: number) =>
     api.patch(`/Applications/${id}/archive`),
 
+  unarchive: (id: number) =>
+    api.patch(`/Applications/${id}/unarchive`),
+
   getStats: () =>
     api.get('/Applications/stats'),
 
