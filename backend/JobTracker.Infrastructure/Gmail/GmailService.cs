@@ -99,8 +99,7 @@ public class GmailService : IGmailService
         // 3. Search for job-related emails from the last 30 days
         // You can tweak this query to be as specific as you want
         var request = gmailClient.Users.Messages.List("me");
-        request.Q = "(subject:application OR subject:interview OR subject:offer OR subject:rejection) newer_than:30d";
-        request.MaxResults = maxResults;
+        request.Q = "(subject:application OR subject:interview OR subject:offer OR subject:rejection OR subject:assessment OR subject:challenge) newer_than:30d"; request.MaxResults = maxResults;
 
         var response = await request.ExecuteAsync();
         var emails = new List<EmailMessageResponse>();

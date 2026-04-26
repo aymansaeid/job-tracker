@@ -2,13 +2,14 @@ import { motion } from 'framer-motion'
 import { Outlet, useLocation } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import Topbar  from './Topbar'
+import WelcomeModal from '../common/WelcomeModal'
 
 // Map routes to page titles
 const TITLES: Record<string, string> = {
   '/app/dashboard':    'Dashboard',
   '/app/kanban':       'Kanban Board',
   '/app/applications': 'Applications',
-  '/app/Folders':           'My Folders',
+  '/app/Folders':      'My Folders',
   '/app/settings':     'Settings',
 }
 
@@ -17,11 +18,12 @@ export default function AppLayout() {
   const title = TITLES[pathname] ?? 'JobTracker'
 
   return (
-    <div className="flex h-screen bg-surface-base overflow-hidden">
+    // 1. Unified the wrapper into a single, clean full-screen flex container
+    <div className="flex h-screen w-full bg-[#0f172a] overflow-hidden">
 
       <Sidebar />
 
-      <div className="flex flex-col flex-1 overflow-hidden">
+      <div className="flex flex-col flex-1 overflow-hidden relative">
         <Topbar title={title} />
 
         {/* Page content */}
@@ -38,6 +40,9 @@ export default function AppLayout() {
         </main>
       </div>
 
+      {/* 2. Place the WelcomeModal at the absolute root so it blurs everything cleanly! */}
+      <WelcomeModal />
+      
     </div>
   )
 }

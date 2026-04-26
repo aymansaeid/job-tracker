@@ -54,6 +54,11 @@ public class SuggestionService : ISuggestionService
                     EmailSubject = email.Subject,
                     CompanyName = aiResult.CompanyName,
                     JobTitle = aiResult.JobTitle,
+
+                    // 🚨 NEW V3 FIELDS: Assumes you added Location and ExtraNotes to your JobUpdateSuggestion entity!
+                    Location = aiResult.Location,
+                    ExtraNotes = aiResult.ExtraNotes,
+
                     SuggestedStage = aiResult.SuggestedStage,
                     SuggestedInterviewDate = aiResult.SuggestedInterviewDate,
                     Status = SuggestionStatus.Pending,
@@ -108,21 +113,60 @@ public class SuggestionService : ISuggestionService
         // 1. Mark as Approved
         suggestion.Status = SuggestionStatus.Approved;
 
-        // 2. Try to find an existing Job Application for this company
-        var jobApp = await _context.JobApplications
-            .FirstOrDefaultAsync(x => x.UserId == userId && x.CompanyName.ToLower() == suggestion.CompanyName.ToLower());
+        // 2. SMART MATCHING V3: Title Protection & Hardcore Normalization
+        var userApps = await _context.JobApplications
+            .Where(x => x.UserId == userId && !x.IsArchived)
+            .ToListAsync();
+
+        var normalizedSuggestionCompany = NormalizeCompanyName(suggestion.CompanyName);
+        var normalizedSuggestionTitle = suggestion.JobTitle?.ToLower()?.Trim() ?? "";
+
+        // Compare normalized strings instead of raw database strings
+        var companyMatches = userApps
+            .Where(a =>
+            {
+                var dbCompany = NormalizeCompanyName(a.CompanyName);
+                return dbCompany == normalizedSuggestionCompany ||
+                       dbCompany.Contains(normalizedSuggestionCompany) ||
+                       normalizedSuggestionCompany.Contains(dbCompany);
+            })
+            .ToList();
+
+        JobApplication jobApp = null;
+
+        if (companyMatches.Any())
+        {
+            // 🚨 THE FIX: Only attach to an existing app IF the job title matches, 
+            // OR if the existing app has no title ("Unknown Role").
+            jobApp = companyMatches.FirstOrDefault(a =>
+                string.IsNullOrWhiteSpace(a.JobTitle) ||
+                a.JobTitle == "Unknown Role" ||
+                (!string.IsNullOrWhiteSpace(normalizedSuggestionTitle) &&
+                 (a.JobTitle.ToLower().Contains(normalizedSuggestionTitle) || normalizedSuggestionTitle.Contains(a.JobTitle.ToLower())))
+            );
+        }
 
         bool isNew = false;
 
         if (jobApp != null)
         {
             // UPDATE EXISTING JOB
+            if ((jobApp.JobTitle == "Unknown Role" || string.IsNullOrWhiteSpace(jobApp.JobTitle)) && !string.IsNullOrWhiteSpace(suggestion.JobTitle))
+            {
+                jobApp.JobTitle = suggestion.JobTitle;
+            }
+
+            // Update location if it's currently missing
+            if (!string.IsNullOrWhiteSpace(suggestion.Location) && string.IsNullOrWhiteSpace(jobApp.Location))
+            {
+                jobApp.Location = suggestion.Location;
+            }
+
             if (suggestion.SuggestedStage.HasValue && jobApp.CurrentStage != suggestion.SuggestedStage.Value)
             {
                 jobApp.CurrentStage = suggestion.SuggestedStage.Value;
                 jobApp.LastUpdatedAt = DateTime.UtcNow;
 
-                // Add History log
                 _context.ApplicationStageHistories.Add(new ApplicationStageHistory
                 {
                     JobApplicationId = jobApp.Id,
@@ -139,32 +183,35 @@ public class SuggestionService : ISuggestionService
             jobApp = new JobApplication
             {
                 UserId = userId,
-                CompanyName = suggestion.CompanyName,
+                CompanyName = suggestion.CompanyName, // Keeps the original exact spelling for the UI
                 JobTitle = string.IsNullOrWhiteSpace(suggestion.JobTitle) ? "Unknown Role" : suggestion.JobTitle,
+                Location = suggestion.Location ?? "", // Uses extracted Location!
                 CurrentStage = suggestion.SuggestedStage ?? ApplicationStage.Applied,
                 AppliedAt = DateTime.UtcNow,
                 LastUpdatedAt = DateTime.UtcNow,
-                Notes = "" // Initialize notes
+                Notes = ""
             };
             _context.JobApplications.Add(jobApp);
         }
 
-        // Preserve the AI extracted link into the job notes! ──
+        // ── INJECT AI NOTES & URL INTO THE KANBAN CARD ──
+        var newNotes = "";
         if (!string.IsNullOrWhiteSpace(suggestion.ActionUrl))
+            newNotes += $"[AI Extracted Link]: {suggestion.ActionUrl}\n";
+
+        if (!string.IsNullOrWhiteSpace(suggestion.ExtraNotes))
+            newNotes += $"[AI Notes]: {suggestion.ExtraNotes}\n";
+
+        if (!string.IsNullOrWhiteSpace(newNotes))
         {
-            var noteAddition = $"\n[AI Extracted Link]: {suggestion.ActionUrl}";
             jobApp.Notes = string.IsNullOrWhiteSpace(jobApp.Notes)
-                ? noteAddition.Trim()
-                : jobApp.Notes + noteAddition;
+                ? newNotes.Trim()
+                : jobApp.Notes + "\n\n" + newNotes.Trim();
         }
 
-        // If it's a brand new app, we MUST save here first so SQL Server generates an ID for the JobEmails table to link to!
-        if (isNew)
-        {
-            await _context.SaveChangesAsync();
-        }
+        if (isNew) await _context.SaveChangesAsync();
 
-        // Actually link the email to the JobApplication! ──
+        // Link Email
         bool emailAlreadyLinked = await _context.JobEmails.AnyAsync(e => e.MessageId == suggestion.MessageId);
         if (!emailAlreadyLinked)
         {
@@ -173,7 +220,7 @@ public class SuggestionService : ISuggestionService
                 JobApplicationId = jobApp.Id,
                 MessageId = suggestion.MessageId,
                 Subject = suggestion.EmailSubject,
-                DateReceived = suggestion.CreatedAt // Storing the time it was processed
+                DateReceived = suggestion.CreatedAt
             });
         }
 
@@ -191,5 +238,27 @@ public class SuggestionService : ISuggestionService
         suggestion.Status = SuggestionStatus.Rejected;
         await _context.SaveChangesAsync();
         return true;
+    }
+
+    private string NormalizeCompanyName(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "";
+
+        var normalized = name.ToLower().Trim();
+
+        // Strip out punctuation
+        normalized = normalized.Replace(".", "").Replace(",", "").Replace("-", "");
+
+        // Strip out common corporate suffixes
+        var suffixes = new[] { " inc", " llc", " ltd", " corp", " corporation", " limited" };
+        foreach (var suffix in suffixes)
+        {
+            if (normalized.EndsWith(suffix))
+            {
+                normalized = normalized.Substring(0, normalized.Length - suffix.Length);
+            }
+        }
+
+        return normalized.Trim();
     }
 }

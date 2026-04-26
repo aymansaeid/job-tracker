@@ -45,7 +45,7 @@ export default function LoginPage() {
   setServerErr(null)
   try {
     const res = await authApi.login(data)
-    const { token } = res.data as AuthResponse
+    const { token , fullName } = res.data as AuthResponse & { fullName: string }
 
     // Decode real user ID from JWT instead of hardcoding 0
     const decoded = decodeJWT(token)
@@ -56,7 +56,7 @@ export default function LoginPage() {
       ?? 0) as number
 
     setAuth(
-      { id: Number(userId), email: data.email, fullName: '' },
+      { id: Number(userId), email: data.email, FullName: fullName},
       token,
     )
     navigate('/app/dashboard', { replace: true })

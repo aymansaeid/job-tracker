@@ -75,7 +75,7 @@ export default function DashboardPage() {
         <StatsGrid stats={stats} isLoading={statsLoading} />
       </section>
 
-      <section>
+     <section id="tour-ai-widget">
         <AiSuggestionsWidget
           suggestions={pendingSuggestions}
           isLoading={suggestionsLoading}

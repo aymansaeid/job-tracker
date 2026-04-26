@@ -25,14 +25,18 @@ public class GeminiEmailParserService : IEmailParserService
 
         // 1. We tell the AI exactly how to behave and what JSON structure to return
         var systemPrompt = @"You are an AI assistant that extracts job application updates from emails. 
-Analyze the email and return ONLY a raw JSON object with the following properties:
+Analyze the email and return ONLY a raw JSON object. Ignore LinkedIn 'similar jobs' spam.
+
 {
-  ""IsJobRelated"": boolean (true if it's a job interview, offer, or rejection),
-  ""CompanyName"": string or null (the name of the company),
-  ""SuggestedStage"": integer or null (2 for Interview, 3 for Offer, 4 for Rejected),
-  ""SuggestedInterviewDate"": string or null (ISO 8601 date format if an interview is mentioned),
-  ""AiReasoning"": string (A single warm, human-readable sentence explaining what this email means, max 25 words),
-  ""ActionUrl"": string or null (If there is a Zoom, Google Meet, Teams, or assessment link, extract the raw URL here)
+  ""IsJobRelated"": boolean (true if it's a job application, assessment, interview, offer, or rejection),
+  ""CompanyName"": string or null,
+  ""JobTitle"": string or null (Extract the exact role, e.g., 'Backend Intern' or 'Software Engineer'),
+  ""Location"": string or null (Extract city, country, or 'Remote' if mentioned),
+  ""SuggestedStage"": integer or null (0=Applied/Sent, 1=Viewed, 2=Interview/Assessment, 3=Offer, 4=Rejected),
+  ""SuggestedInterviewDate"": string or null (ISO 8601 date format),
+  ""AiReasoning"": string (A 25-word summary in English),
+  ""ActionUrl"": string or null (Assessment, Meet, or Zoom links),
+  ""ExtraNotes"": string or null (Extract any important requirements, next steps, or specific instructions mentioned in the email)
 }
 Do not include markdown tags like ```json. Just return the raw JSON object.";
 

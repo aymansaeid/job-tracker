@@ -17,4 +17,8 @@ public class ParsedEmailResult
     public string? AiReasoning { get; set; }
 
     public string? ActionUrl { get; set; }
+
+    public string? Location { get; set; } 
+
+    public string? ExtraNotes { get; set; } 
 }
