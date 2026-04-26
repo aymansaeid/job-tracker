@@ -57,7 +57,7 @@ public static class DependencyInjection
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IGmailService, Infrastructure.Gmail.GmailService>();
-        services.AddScoped<IEmailParserService, MockEmailParserService>();
+        services.AddHttpClient<IEmailParserService, GeminiEmailParserService>();
         services.AddScoped<ISuggestionService, SuggestionService>();
         services.AddScoped<IUserService, UserService>();
 

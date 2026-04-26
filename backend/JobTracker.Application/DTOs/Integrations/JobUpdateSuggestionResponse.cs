@@ -14,4 +14,6 @@ public class JobUpdateSuggestionResponse
     public DateTime? SuggestedInterviewDate { get; set; }
     public SuggestionStatus Status { get; set; }
     public DateTime CreatedAt { get; set; }
+    public string? AiReasoning { get; set; }
+    public string? ActionUrl { get; set; }
 }

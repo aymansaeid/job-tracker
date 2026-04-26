@@ -1,10 +1,9 @@
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { motion } from 'framer-motion'
-import { MapPin, Briefcase, Clock, ExternalLink } from 'lucide-react'
+import { MapPin, Clock, ExternalLink } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import type { JobApplication } from '../../types'
-import { EMPLOYMENT_LABEL, timeAgo, cn } from '../../lib/utils'
+import { timeAgo, cn } from '../../lib/utils'
 
 interface Props {
   app:      JobApplication

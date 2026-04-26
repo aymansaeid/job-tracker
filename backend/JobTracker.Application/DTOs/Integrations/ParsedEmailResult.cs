@@ -15,4 +15,6 @@ public class ParsedEmailResult
 
     // A short reasoning from the AI on why it chose this stage
     public string? AiReasoning { get; set; }
+
+    public string? ActionUrl { get; set; }
 }

@@ -57,7 +57,11 @@ public class SuggestionService : ISuggestionService
                     SuggestedStage = aiResult.SuggestedStage,
                     SuggestedInterviewDate = aiResult.SuggestedInterviewDate,
                     Status = SuggestionStatus.Pending,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.UtcNow,
+                    AiReasoning = aiResult.AiReasoning,
+                    ActionUrl = aiResult.ActionUrl
+
+
                 };
 
                 _context.JobUpdateSuggestions.Add(suggestion);

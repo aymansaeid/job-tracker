@@ -23,5 +23,9 @@ namespace JobTracker.Domain.Entities
 
         // Navigation
         public User? User { get; set; }
+
+        public string? AiReasoning { get; set; }
+
+        public string? ActionUrl { get; set; }
     }
 }
