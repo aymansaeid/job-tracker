@@ -60,7 +60,7 @@ public static class DependencyInjection
         services.AddHttpClient<IEmailParserService, GeminiEmailParserService>();
         services.AddScoped<ISuggestionService, SuggestionService>();
         services.AddScoped<IUserService, UserService>();
-
+        services.AddScoped<IDocumentService, DocumentService>();
         return services;
     }
 }

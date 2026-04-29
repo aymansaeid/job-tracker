@@ -24,4 +24,6 @@ public class ApplicationDbContext : DbContext
     public DbSet<JobEmail> JobEmails => Set<JobEmail>();
 
     public DbSet<JobUpdateSuggestion> JobUpdateSuggestions => Set<JobUpdateSuggestion>();
+
+    public DbSet<UserDocument> UserDocuments { get; set; }
 }

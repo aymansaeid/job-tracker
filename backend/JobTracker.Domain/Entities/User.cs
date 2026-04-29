@@ -14,5 +14,7 @@ namespace JobTracker.Domain.Entities
         public string? GoogleRefreshToken { get; set; }
 
         public List<JobApplication> JobApplications { get; set; } = new();
+
+        public List<UserDocument> Documents { get; set; } = new();
     }
 }
