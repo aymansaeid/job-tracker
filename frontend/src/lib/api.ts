@@ -129,3 +129,35 @@ export const usersApi = {
   changePassword: (data: { currentPassword: string; newPassword: string }) =>
     api.put('/Users/password', data),
 }
+
+// ── Documents ────────────────────────────────────────────────
+// GET    /api/Documents
+// POST   /api/Documents/upload
+// PUT    /api/Documents/{id}/primary
+// DELETE /api/Documents/{id}
+
+export const documentsApi = {
+  getAll: () => 
+    api.get('/Documents'),
+
+  // category mapping: 1 = Resume, 2 = Certificate, 3 = ImportantDocument
+  upload: (file: File, category: number, isPrimary: boolean = false) => {
+    const formData = new FormData()
+    formData.append('File', file)
+    formData.append('Category', category.toString())
+    formData.append('IsPrimary', isPrimary.toString())
+
+    return api.post('/Documents/upload', formData, {
+      headers: {
+        // We MUST override the default application/json here
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+  },
+
+  setPrimary: (id: number) => 
+    api.put(`/Documents/${id}/primary`),
+
+  delete: (id: number) => 
+    api.delete(`/Documents/${id}`),
+}

@@ -37,26 +37,28 @@ public class DocumentsController : ControllerBase
     }
 
     [HttpPost("upload")]
-    // Note: We use [FromForm] here because React will send a FormData object, not JSON!
-    public async Task<IActionResult> UploadDocument([FromForm] IFormFile file, [FromForm] DocumentCategory category, [FromForm] bool isPrimary = false)
+    public async Task<IActionResult> UploadDocument([FromForm] UploadDocumentRequest request)
     {
         try
         {
             var userId = GetUserId();
             if (userId == 0) return Unauthorized();
 
-            var document = await _documentService.UploadDocumentAsync(userId, file, category, isPrimary);
+            // Pass the properties from the request object into your service
+            var document = await _documentService.UploadDocumentAsync(
+                userId,
+                request.File,
+                request.Category,
+                request.IsPrimary);
 
             return Ok(document);
         }
         catch (ArgumentException ex)
         {
-            // Catches our custom limits (e.g., "File is over 5MB" or "Max 5 CVs reached")
             return BadRequest(new { message = ex.Message });
         }
         catch (Exception ex)
         {
-            // Log the actual exception here in production!
             return StatusCode(500, new { message = "An unexpected error occurred while saving the document." });
         }
     }

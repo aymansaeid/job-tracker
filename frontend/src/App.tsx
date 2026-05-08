@@ -11,7 +11,7 @@ import ApplicationsPage from './pages/app/ApplicationsPage'
 import KanbanPage from './pages/app/KanbanPage'
 import ApplicationDetailPage from './pages/app/ApplicationDetailPage'
 import SettingsPage from './pages/app/SettingsPage'
-
+import MyFoldersPage from './pages/app/MyFoldersPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -36,8 +36,6 @@ function RequireGuest({ children }: { children: React.ReactNode }) {
   return isAuthenticated ? <Navigate to="/app/dashboard" replace /> : <>{children}</>
 }
 
-function MyFolderse()           { return <p className="text-slate-400">coming soon</p> }
-
 function AnimatedRoutes() {
   const location = useLocation()
 
@@ -57,7 +55,7 @@ function AnimatedRoutes() {
           <Route path="kanban"          element={<KanbanPage />} />
           <Route path="applications"    element={<ApplicationsPage />} />
           <Route path="applications/:id" element={<ApplicationDetailPage />} />
-          <Route path="Folders"              element={<MyFolderse />} />
+          <Route path="Folders"              element={<MyFoldersPage />} />
           <Route path="settings"        element={<SettingsPage />} />
         </Route>
 
