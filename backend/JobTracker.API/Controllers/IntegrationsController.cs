@@ -64,13 +64,24 @@ public class IntegrationsController : ControllerBase
     [HttpGet("google/emails/{messageId}")]
     public async Task<IActionResult> GetEmailBody(string messageId)
     {
-        var userId = User.GetUserId();
-        var email = await _gmailService.GetEmailBodyAsync(userId, messageId);
+        try
+        {
+            var userId = User.GetUserId();
+            var email = await _gmailService.GetEmailBodyAsync(userId, messageId);
 
-        if (email == null)
-            return NotFound("Email not found or Gmail not connected.");
+            if (email == null)
+                return NotFound("Email not found or Gmail not connected.");
 
-        return Ok(email);
+            return Ok(email);
+        }
+        catch (UnauthorizedAccessException ex) when (ex.Message == "GMAIL_TOKEN_EXPIRED")
+        {
+            return StatusCode(403, new
+            {
+                code = "GMAIL_TOKEN_EXPIRED",
+                message = "Your Gmail session expired. Please reconnect."
+            });
+        }
     }
 
     [HttpDelete("google")]

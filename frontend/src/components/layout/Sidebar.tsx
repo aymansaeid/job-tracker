@@ -98,7 +98,7 @@ console.log("USER DATA:", user);
         )}>
           <div className="w-7 h-7 rounded-full bg-gradient-to-br from-cyan-400 to-violet-500 flex items-center justify-center shrink-0">
             <span className="text-white text-xs font-bold">
-              {user?.FullName?.charAt(0)?.toUpperCase() ?? 'U'}
+              {user?.fullName?.charAt(0)?.toUpperCase() ?? 'U'}
             </span>
           </div>
           <AnimatePresence>
@@ -111,7 +111,7 @@ console.log("USER DATA:", user);
                 className="flex-1 min-w-0"
               >
                 <p className="text-xs font-semibold text-slate-200 truncate">
-                  {user?.FullName || 'user name not found '}
+                  {user?.fullName || 'user name not found '}
                 </p>
                 <p className="text-[10px] text-slate-500 truncate">{user?.email}</p>
               </motion.div>

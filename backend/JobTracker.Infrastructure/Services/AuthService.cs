@@ -55,7 +55,8 @@ public class AuthService : IAuthService
             Id = user.Id,
             FullName = user.FullName,
             Email = user.Email,
-            Token = token
+            Token = token,
+            IsGmailConnected = false
         };
     }
 
@@ -81,7 +82,8 @@ public class AuthService : IAuthService
             Id = user.Id,
             FullName = user.FullName,
             Email = user.Email,
-            Token = token
+            Token = token,
+            IsGmailConnected = !string.IsNullOrWhiteSpace(user.GoogleRefreshToken)
         };
     }
 }

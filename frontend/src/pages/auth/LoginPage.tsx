@@ -41,30 +41,40 @@ export default function LoginPage() {
   const { register, handleSubmit, formState: { errors, isSubmitting } } =
     useForm<FormData>({ resolver: zodResolver(schema) })
 
-  const onSubmit = async (data: FormData) => {
-  setServerErr(null)
-  try {
-    const res = await authApi.login(data)
-    const { token , fullName } = res.data as AuthResponse & { fullName: string }
+ const onSubmit = async (data: FormData) => {
+    setServerErr(null)
+    try {
+      const res = await authApi.login(data)
+      
+      // 1. BULLETPROOF EXTRACTION (Checks both C# and JS casings)
+      const responseData = res.data as any;
+      const token = responseData.token || responseData.Token;
+      const fullName = responseData.fullName || responseData.FullName;
+      const isConnected = responseData.isGmailConnected ?? responseData.IsGmailConnected ?? false;
 
-    // Decode real user ID from JWT instead of hardcoding 0
-    const decoded = decodeJWT(token)
-    const userId  = (decoded?.['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier']
-      ?? decoded?.sub
-      ?? decoded?.nameid
-      ?? decoded?.id
-      ?? 0) as number
+      const decoded = decodeJWT(token)
+      const userId  = (decoded?.['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier']
+        ?? decoded?.sub
+        ?? decoded?.nameid
+        ?? decoded?.id
+        ?? 0) as number
 
-    setAuth(
-      { id: Number(userId), email: data.email, FullName: fullName},
-      token,
-    )
-    navigate('/app/dashboard', { replace: true })
-  } catch (err) {
-    const e = err as AxiosError<{ message?: string }>
-    setServerErr(e.response?.data?.message ?? 'Invalid email or password.')
+      // 2. PASS IT INTO ZUSTAND
+      setAuth(
+        { 
+          id: Number(userId), 
+          email: data.email, 
+          fullName: fullName || 'User',
+          isGmailConnected: isConnected 
+        },
+        token,
+      )
+      navigate('/app/dashboard', { replace: true })
+    } catch (err) {
+      const e = err as AxiosError<{ message?: string }>
+      setServerErr(e.response?.data?.message ?? 'Invalid email or password.')
+    }
   }
-}
 
   return (
     <motion.div

@@ -3,12 +3,15 @@
 export interface User {
   id: number
   email: string
-  FullName: string
+  fullName: string
   googleRefreshToken?: string
+  isGmailConnected?: boolean;
 }
 
 export interface AuthResponse {
   token: string
+    fullName: string
+  isGmailConnected?: boolean
 }
 
 export interface LoginRequest {
@@ -64,6 +67,7 @@ export interface JobApplication {
   isArchived: boolean
   appliedAt: string
   lastUpdatedAt: string
+  linkedEmails : number
 }
 
 export interface CreateApplicationRequest {

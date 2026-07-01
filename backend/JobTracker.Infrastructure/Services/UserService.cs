@@ -70,7 +70,8 @@ public class UserService : IUserService
                 Id = x.Id,
                 FullName = x.FullName,
                 Email = x.Email,
-                GoogleRefreshToken = x.GoogleRefreshToken
+                GoogleRefreshToken = x.GoogleRefreshToken,
+                IsGmailConnected = !string.IsNullOrWhiteSpace(x.GoogleRefreshToken)
             })
             .FirstOrDefaultAsync();
     }

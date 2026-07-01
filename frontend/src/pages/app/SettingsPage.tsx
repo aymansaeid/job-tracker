@@ -56,12 +56,12 @@ export default function SettingsPage() {
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-400 to-violet-500 flex items-center justify-center shrink-0">
               <span className="font-display font-bold text-white text-lg">
-                {user?.FullName?.charAt(0)?.toUpperCase() ?? 'U'}
+                {user?.fullName?.charAt(0)?.toUpperCase() ?? 'U'}
               </span>
             </div>
             <div className="min-w-0">
               <p className="font-display font-bold text-white text-sm truncate">
-                {user?.FullName || 'User'}
+                {user?.fullName || 'User'}
               </p>
               <p className="text-xs text-slate-500 truncate">{user?.email}</p>
             </div>

@@ -99,10 +99,28 @@ public class GmailService : IGmailService
         // 3. Search for job-related emails from the last 30 days
         // You can tweak this query to be as specific as you want
         var request = gmailClient.Users.Messages.List("me");
-        request.Q = "(subject:application OR subject:interview OR subject:offer OR subject:rejection OR subject:assessment OR subject:challenge) newer_than:30d"; request.MaxResults = maxResults;
+        request.Q = "(subject:application OR subject:interview OR subject:offer OR subject:rejection OR subject:assessment OR subject:challenge) newer_than:30d";
+        request.MaxResults = maxResults;
 
-        var response = await request.ExecuteAsync();
         var emails = new List<EmailMessageResponse>();
+        Google.Apis.Gmail.v1.Data.ListMessagesResponse response;
+
+        try
+        {
+            // 🔒 Execute inside a defensive try-catch
+            response = await request.ExecuteAsync();
+        }
+        catch (TokenResponseException ex) when (ex.Error.Error == "invalid_grant")
+        {
+            // 🧼 Token is dead! Clean the database so the user can re-authenticate cleanly.
+            await DisconnectAsync(userId);
+            throw new UnauthorizedAccessException("GMAIL_TOKEN_EXPIRED"); // 👈 NEW: Throw to controller
+        }
+        catch (Exception)
+        {
+            // Catch-all for any other weird network/Google API glitches
+            return emails;
+        }
 
         if (response.Messages is null || !response.Messages.Any())
             return emails;
@@ -153,7 +171,21 @@ public class GmailService : IGmailService
         // Fetch the FULL email this time, not just metadata
         var request = gmailClient.Users.Messages.Get("me", messageId);
         request.Format = UsersResource.MessagesResource.GetRequest.FormatEnum.Full;
-        var msgData = await request.ExecuteAsync();
+
+        Google.Apis.Gmail.v1.Data.Message msgData;
+        try
+        {
+            msgData = await request.ExecuteAsync();
+        }
+        catch (TokenResponseException ex) when (ex.Error.Error == "invalid_grant")
+        {
+            await DisconnectAsync(userId);
+            throw new UnauthorizedAccessException("GMAIL_TOKEN_EXPIRED"); // 👈 NEW: Throw to controller
+        }
+        catch (Exception)
+        {
+            return null;
+        }
 
         if (msgData == null) return null;
 

@@ -24,7 +24,7 @@ export default function ProfileForm() {
   const { register, handleSubmit, formState: { errors, isSubmitting } } =
     useForm<FormData>({
       resolver: zodResolver(schema),
-      defaultValues: { fullName: user?.FullName ?? '' },
+      defaultValues: { fullName: user?.fullName ?? '' },
     })
 
   const onSubmit = async (data: FormData) => {
@@ -34,7 +34,7 @@ export default function ProfileForm() {
       await usersApi.updateProfile({ fullName: data.fullName })
       // Update local store so topbar/sidebar reflect the change instantly
       if (user && token) {
-        setAuth({ ...user, FullName: data.fullName }, token)
+        setAuth({ ...user, fullName: data.fullName }, token)
       }
       setSuccess(true)
       setTimeout(() => setSuccess(false), 3000)
@@ -60,7 +60,7 @@ export default function ProfileForm() {
             <User size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
             <input
               {...register('fullName')}
-              placeholder="Jane Doe"
+              placeholder=""
               className="input-glass pl-10"
             />
           </div>

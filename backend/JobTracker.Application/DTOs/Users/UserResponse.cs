@@ -6,4 +6,5 @@ public class UserResponse
     public string FullName { get; set; } = default!;
     public string Email { get; set; } = default!;
     public string? GoogleRefreshToken { get; set; }
+    public bool IsGmailConnected { get; set; }
 }

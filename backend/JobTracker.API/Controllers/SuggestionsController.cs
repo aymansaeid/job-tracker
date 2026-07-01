@@ -20,9 +20,21 @@ public class SuggestionsController : ControllerBase
     [HttpPost("sync")]
     public async Task<IActionResult> SyncEmails()
     {
-        var userId = User.GetUserId();
-        var newCount = await _suggestionService.ProcessRecentEmailsAsync(userId);
-        return Ok(new { Message = $"Sync complete. Found {newCount} new suggestions." });
+        try
+        {
+            var userId = User.GetUserId();
+            var newCount = await _suggestionService.ProcessRecentEmailsAsync(userId);
+            return Ok(new { Message = $"Sync complete. Found {newCount} new suggestions." });
+        }
+        catch (UnauthorizedAccessException ex) when (ex.Message == "GMAIL_TOKEN_EXPIRED")
+        {
+            // 👈 NEW: Send the 403 back to React
+            return StatusCode(403, new
+            {
+                code = "GMAIL_TOKEN_EXPIRED",
+                message = "Your Gmail session expired. Please reconnect to continue syncing."
+            });
+        }
     }
 
     [HttpGet("pending")]

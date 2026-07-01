@@ -1,6 +1,6 @@
 import axios from 'axios'
 import type { AxiosError, InternalAxiosRequestConfig } from 'axios'
-
+import { useAuthStore } from '../store/authStore'
 const BASE_URL = import.meta.env.VITE_API_URL ?? 'https://localhost:7266/api'
 
 
@@ -26,10 +26,25 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 api.interceptors.response.use(
   (res) => res,
   (error: AxiosError) => {
+    // 1. Standard 401 Unauthorized (Log out)
     if (error.response?.status === 401) {
       localStorage.removeItem('auth-storage')
       window.location.href = '/login'
     }
+
+    // 2. Custom 403 Gmail Expiration (The Fallback)
+    if (error.response?.status === 403) {
+      const data = error.response.data as { code?: string, message?: string }
+      
+      if (data?.code === 'GMAIL_TOKEN_EXPIRED') {
+        // Automatically flip the global state!
+        useAuthStore.getState().setGmailDisconnected()
+        
+        // Throw the UI notification (Replace with toast.error if you have it)
+        alert(data.message || "Gmail disconnected. Please reconnect.")
+      }
+    }
+
     return Promise.reject(error)
   },
 )

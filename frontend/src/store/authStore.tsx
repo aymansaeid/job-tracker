@@ -9,6 +9,8 @@ interface AuthState {
   setAuth:         (user: User, token: string) => void
   setUser:         (user: User) => void
   logout:          () => void
+  setGmailDisconnected: () => void
+  setGmailConnected: () => void
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -21,12 +23,21 @@ export const useAuthStore = create<AuthState>()(
       setAuth: (user, token) =>
         set({ user, token, isAuthenticated: true }),
 
-      // Update user data without touching the token
       setUser: (user) =>
         set({ user }),
 
       logout: () =>
         set({ user: null, token: null, isAuthenticated: false }),
+
+      setGmailDisconnected: () =>
+        set((state) => ({
+          user: state.user ? { ...state.user, isGmailConnected: false } : null
+        })),
+        
+      setGmailConnected: () =>
+        set((state) => ({
+          user: state.user ? { ...state.user, isGmailConnected: true } : null
+        })),
     }),
     {
       name: 'auth-storage',
