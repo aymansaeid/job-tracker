@@ -23,7 +23,6 @@ export default function KanbanBoard({ applications, onStageChange }: Props) {
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      // 5px threshold — short enough to feel responsive, prevents accidental drags on clicks
       activationConstraint: { distance: 5 },
     }),
   )
@@ -43,11 +42,9 @@ export default function KanbanBoard({ applications, onStageChange }: Props) {
 
     let newStage: ApplicationStage | null = null
 
-    // Dropped on a column droppable (id format: 'col-{stage}')
     if (typeof overId === 'string' && overId.startsWith('col-')) {
       newStage = parseInt(overId.replace('col-', '')) as ApplicationStage
     } else {
-      // Dropped on another card — use that card's stage
       const targetApp = applications.find(a => a.id === overId)
       if (targetApp) newStage = targetApp.currentStage
     }
@@ -62,7 +59,6 @@ export default function KanbanBoard({ applications, onStageChange }: Props) {
     }
   }
 
-  // Group by stage, exclude archived
   const byStage = STAGE_ORDER.reduce<Record<number, JobApplication[]>>(
     (acc, stage) => {
       acc[stage] = applications.filter(
@@ -79,14 +75,20 @@ export default function KanbanBoard({ applications, onStageChange }: Props) {
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex gap-3 overflow-x-auto pb-6 -mx-6 px-6 min-h-[calc(100vh-200px)]">
-        {STAGE_ORDER.map(stage => (
-          <KanbanColumn
-            key={stage}
-            stage={stage}
-            applications={byStage[stage] ?? []}
-          />
-        ))}
+      <div className="relative -mx-6">
+        {/* Edge fades — hint that the board scrolls now that there are 6 lanes */}
+        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-8 bg-gradient-to-r from-surface-base to-transparent" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-8 bg-gradient-to-l from-surface-base to-transparent" />
+
+        <div className="flex min-h-[calc(100vh-200px)] gap-4 overflow-x-auto px-6 pb-6">
+          {STAGE_ORDER.map(stage => (
+            <KanbanColumn
+              key={stage}
+              stage={stage}
+              applications={byStage[stage] ?? []}
+            />
+          ))}
+        </div>
       </div>
 
       <DragOverlay dropAnimation={{ duration: 180, easing: 'ease-out' }}>

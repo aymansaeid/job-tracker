@@ -8,8 +8,7 @@ import { z } from 'zod'
 import { AxiosError } from 'axios'
 import { authApi } from '../../lib/api'
 import { useAuthStore } from '../../store/authStore'
-import type { AuthResponse } from '../../types'
-import type { Variants } from "framer-motion"
+import type { Variants } from 'framer-motion'
 import { decodeJWT } from '../../lib/utils'
 
 const schema = z.object({
@@ -33,39 +32,37 @@ const field = {
 }
 
 export default function LoginPage() {
-  const navigate  = useNavigate()
-  const setAuth   = useAuthStore((s) => s.setAuth)
-  const [showPw, setShowPw]       = useState(false)
+  const navigate = useNavigate()
+  const setAuth = useAuthStore((s) => s.setAuth)
+  const [showPw, setShowPw] = useState(false)
   const [serverErr, setServerErr] = useState<string | null>(null)
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } =
     useForm<FormData>({ resolver: zodResolver(schema) })
 
- const onSubmit = async (data: FormData) => {
+  const onSubmit = async (data: FormData) => {
     setServerErr(null)
     try {
       const res = await authApi.login(data)
-      
-      // 1. BULLETPROOF EXTRACTION (Checks both C# and JS casings)
-      const responseData = res.data as any;
-      const token = responseData.token || responseData.Token;
-      const fullName = responseData.fullName || responseData.FullName;
-      const isConnected = responseData.isGmailConnected ?? responseData.IsGmailConnected ?? false;
+
+      const responseData = res.data as any
+      const token = responseData.token || responseData.Token
+      const fullName = responseData.fullName || responseData.FullName
+      const isConnected = responseData.isGmailConnected ?? responseData.IsGmailConnected ?? false
 
       const decoded = decodeJWT(token)
-      const userId  = (decoded?.['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier']
+      const userId = (decoded?.['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier']
         ?? decoded?.sub
         ?? decoded?.nameid
         ?? decoded?.id
         ?? 0) as number
 
-      // 2. PASS IT INTO ZUSTAND
       setAuth(
-        { 
-          id: Number(userId), 
-          email: data.email, 
+        {
+          id: Number(userId),
+          email: data.email,
           fullName: fullName || 'User',
-          isGmailConnected: isConnected 
+          isGmailConnected: isConnected,
         },
         token,
       )
@@ -81,25 +78,26 @@ export default function LoginPage() {
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       className="min-h-screen bg-surface-base flex items-center justify-center px-4 relative overflow-hidden"
     >
-      {/* Orbs */}
       <div className="orb w-96 h-96 -top-24 -right-24 opacity-20"
            style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.35) 0%, transparent 70%)', animationDelay: '2s' }} />
       <div className="orb w-80 h-80 -bottom-20 -left-20 opacity-15"
            style={{ background: 'radial-gradient(circle, rgba(34,211,238,0.3) 0%, transparent 70%)', animationDelay: '6s' }} />
+      <div className="noise-overlay absolute inset-0 pointer-events-none" />
 
-      {/* Logo */}
-      <Link to="/" className="absolute top-6 left-6 flex items-center gap-2">
+      <Link to="/" className="absolute top-6 left-6 flex items-center gap-2 z-10">
         <div className="w-8 h-8 rounded-lg bg-gradient-brand flex items-center justify-center">
           <Sparkles size={15} className="text-white" />
         </div>
         <span className="font-display font-bold text-white">JobTracker</span>
       </Link>
 
-      <motion.div variants={cardVariants} initial="initial" animate="animate" className="relative w-full max-w-md">
-        {/* Glow halo */}
+      <motion.div variants={cardVariants} initial="initial" animate="animate" className="relative z-10 w-full max-w-md">
         <div className="absolute -inset-px rounded-2xl bg-gradient-to-br from-cyan-500/20 via-transparent to-violet-500/20 blur-sm" />
 
-        <div className="relative glass rounded-2xl border border-white/10 p-8 shadow-card">
+        {/* Was `glass ... shadow-card` — the utility shadow silently beat the
+            .glass inset highlight in the cascade. glass-raised carries both
+            correctly and matches the elevation of every other floating panel. */}
+        <div className="glass-raised relative rounded-2xl p-8">
           <motion.div variants={stagger} initial="initial" animate="animate">
 
             <motion.div variants={field} className="mb-7">
@@ -117,7 +115,6 @@ export default function LoginPage() {
                 </motion.div>
               )}
 
-              {/* Email */}
               <motion.div variants={field}>
                 <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
                   Email address
@@ -131,7 +128,6 @@ export default function LoginPage() {
                 )}
               </motion.div>
 
-              {/* Password */}
               <motion.div variants={field}>
                 <div className="flex items-center justify-between mb-2">
                   <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">
@@ -156,7 +152,6 @@ export default function LoginPage() {
                 )}
               </motion.div>
 
-              {/* Submit */}
               <motion.div variants={field} className="pt-1">
                 <motion.button type="submit" disabled={isSubmitting}
                                whileHover={isSubmitting ? {} : { scale: 1.02, y: -1 }}

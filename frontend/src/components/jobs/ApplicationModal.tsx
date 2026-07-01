@@ -8,12 +8,14 @@ import { EmploymentType } from '../../types'
 import type { JobApplication } from '../../types'
 import { EMPLOYMENT_LABEL } from '../../lib/utils'
 
+const EASE = [0.21, 0.47, 0.32, 0.98] as const
+
 const schema = z.object({
   companyName:    z.string().min(1, 'Company name is required'),
   jobTitle:       z.string().min(1, 'Job title is required'),
   jobUrl:         z.string().url('Must be a valid URL').optional().or(z.literal('')),
   location:       z.string().optional(),
-  employmentType: z.number(), // Switched from coerce to standard number
+  employmentType: z.number(),
   appliedAt:      z.string().min(1, 'Date is required'),
   notes:          z.string().optional(),
 })
@@ -24,7 +26,7 @@ interface Props {
   open:       boolean
   onClose:    () => void
   onSubmit:   (data: ApplicationFormData) => Promise<void>
-  initial?:   JobApplication | null   // if set → edit mode
+  initial?:   JobApplication | null
   isLoading:  boolean
 }
 
@@ -42,7 +44,6 @@ export default function ApplicationModal({
       },
     })
 
-  // Populate form when editing
   useEffect(() => {
     if (initial) {
       reset({
@@ -74,7 +75,6 @@ export default function ApplicationModal({
     <AnimatePresence>
       {open && (
         <>
-          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -83,17 +83,15 @@ export default function ApplicationModal({
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
           />
 
-          {/* Modal */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1,    y: 0  }}
             exit={{    opacity: 0, scale: 0.95,  y: 20 }}
-            transition={{ duration: 0.3, ease: [0.21, 0.47, 0.32, 0.98] }}
+            transition={{ duration: 0.3, ease: EASE }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
           >
-            <div className="glass rounded-2xl border border-white/10 shadow-card w-full max-w-lg pointer-events-auto max-h-[90vh] overflow-y-auto">
+            <div className="glass-raised rounded-2xl shadow-card w-full max-w-lg pointer-events-auto max-h-[90vh] overflow-y-auto">
 
-              {/* Header */}
               <div className="flex items-center justify-between px-6 py-5 border-b border-white/[0.07]">
                 <h2 className="font-display font-bold text-white">
                   {isEdit ? 'Edit Application' : 'Add Application'}
@@ -104,43 +102,34 @@ export default function ApplicationModal({
                 </button>
               </div>
 
-              {/* Form */}
               <form onSubmit={handleSubmit(onSubmit)} className="px-6 py-5 space-y-5">
 
-                {/* Company + Job Title */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className={labelClass}>Company *</label>
-                    <input {...register('companyName')} placeholder="Google"
-                           className="input-glass" />
+                    <input {...register('companyName')} placeholder="Google" className="input-glass" />
                     {errors.companyName && <p className={errorClass}>{errors.companyName.message}</p>}
                   </div>
                   <div>
                     <label className={labelClass}>Job Title *</label>
-                    <input {...register('jobTitle')} placeholder="Software Engineer"
-                           className="input-glass" />
+                    <input {...register('jobTitle')} placeholder="Software Engineer" className="input-glass" />
                     {errors.jobTitle && <p className={errorClass}>{errors.jobTitle.message}</p>}
                   </div>
                 </div>
 
-                {/* URL */}
                 <div>
                   <label className={labelClass}>Job URL</label>
-                  <input {...register('jobUrl')} placeholder="https://careers.google.com/..."
-                         className="input-glass" />
+                  <input {...register('jobUrl')} placeholder="https://careers.google.com/..." className="input-glass" />
                   {errors.jobUrl && <p className={errorClass}>{errors.jobUrl.message}</p>}
                 </div>
 
-                {/* Location + Employment Type */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className={labelClass}>Location</label>
-                    <input {...register('location')} placeholder="Remote, New York…"
-                           className="input-glass" />
+                    <input {...register('location')} placeholder="Remote, New York…" className="input-glass" />
                   </div>
                   <div>
                     <label className={labelClass}>Employment Type</label>
-                    {/* Handled the number conversion natively right here */}
                     <select {...register('employmentType', { valueAsNumber: true })}
                             className="input-glass bg-surface-elevated cursor-pointer">
                       {Object.entries(EMPLOYMENT_LABEL).map(([val, label]) => (
@@ -150,15 +139,12 @@ export default function ApplicationModal({
                   </div>
                 </div>
 
-                {/* Applied At */}
                 <div>
                   <label className={labelClass}>Applied Date *</label>
-                  <input {...register('appliedAt')} type="date"
-                         className="input-glass cursor-pointer" />
+                  <input {...register('appliedAt')} type="date" className="input-glass cursor-pointer" />
                   {errors.appliedAt && <p className={errorClass}>{errors.appliedAt.message}</p>}
                 </div>
 
-                {/* Notes */}
                 <div>
                   <label className={labelClass}>Notes</label>
                   <textarea {...register('notes')} rows={3}
@@ -166,7 +152,6 @@ export default function ApplicationModal({
                             className="input-glass resize-none" />
                 </div>
 
-                {/* Actions */}
                 <div className="flex gap-3 pt-2">
                   <button type="button" onClick={onClose} className="btn-ghost flex-1 py-3">
                     Cancel

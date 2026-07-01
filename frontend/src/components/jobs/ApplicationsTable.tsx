@@ -3,7 +3,7 @@ import { Pencil, Trash2, Archive, ExternalLink, MapPin } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import type { JobApplication } from '../../types'
 import { EMPLOYMENT_LABEL, timeAgo, cn } from '../../lib/utils'
-import StageBadge from '../common/StageBadge'
+import { StageBadge } from '../common/StageBadge'
 
 interface RowActionsProps {
   app:       JobApplication
@@ -49,12 +49,17 @@ function RowActions({ app, onEdit, onDelete, onArchive }: RowActionsProps) {
   )
 }
 
+// Fixed: `w-${w}` was built at runtime, which Tailwind's compiler can't see at
+// build time — those width utilities were never generated. Inline style avoids
+// depending on the purge scan entirely.
+const SKELETON_WIDTHS = [112, 96, 80, 64, 64, 56, 56, 96]
+
 function SkeletonRow() {
   return (
     <tr className="animate-pulse">
-      {[28, 24, 20, 16, 16, 14, 14, 24].map((w, i) => (
+      {SKELETON_WIDTHS.map((w, i) => (
         <td key={i} className="py-3.5 px-4">
-          <div className={`h-4 w-${w} rounded bg-white/[0.05]`} />
+          <div className="h-4 rounded bg-white/[0.05]" style={{ width: w }} />
         </td>
       ))}
     </tr>
@@ -75,7 +80,7 @@ export default function ApplicationsTable({
   const navigate = useNavigate()
 
   return (
-    <div className="glass rounded-2xl border border-white/[0.07] overflow-x-auto">
+    <div className="glass rounded-2xl overflow-x-auto">
       <table className="w-full min-w-[900px]">
         <thead>
           <tr className="border-b border-white/[0.06]">
@@ -113,7 +118,6 @@ export default function ApplicationsTable({
                     app.isArchived && 'opacity-50',
                   )}
                 >
-                  {/* Company */}
                   <td className="py-3.5 px-4 max-w-[200px]">
                     <div className="flex items-start gap-3">
                       <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500/20 to-violet-500/20 border border-white/10 flex items-center justify-center shrink-0 mt-0.5">
@@ -127,14 +131,12 @@ export default function ApplicationsTable({
                     </div>
                   </td>
 
-                  {/* Role (Changed from Link to simple span since row handles click) */}
                   <td className="py-3.5 px-4 max-w-[200px]">
                     <span className="text-sm text-slate-400 group-hover:text-cyan-400 transition-colors leading-snug block">
                       {app.jobTitle ?? '—'}
                     </span>
                   </td>
 
-                  {/* Location */}
                   <td className="py-3.5 px-4">
                     {app.location ? (
                       <span className="flex items-center gap-1.5 text-xs text-slate-400">
@@ -146,33 +148,28 @@ export default function ApplicationsTable({
                     )}
                   </td>
 
-                  {/* Stage */}
                   <td className="py-3.5 px-4">
                     <StageBadge stage={app.currentStage} />
                   </td>
 
-                  {/* Employment type */}
                   <td className="py-3.5 px-4">
                     <span className="text-xs text-slate-500">
                       {EMPLOYMENT_LABEL[app.employmentType] || 'Full Time'}
                     </span>
                   </td>
 
-                  {/* Applied date */}
                   <td className="py-3.5 px-4">
-                    <span className="text-xs text-slate-500">
+                    <span className="text-xs font-mono text-slate-500">
                       {timeAgo(app.appliedAt)}
                     </span>
                   </td>
 
-                  {/* Last Updated */}
                   <td className="py-3.5 px-4">
-                    <span className="text-xs text-slate-500">
+                    <span className="text-xs font-mono text-slate-500">
                       {timeAgo(app.lastUpdatedAt)}
                     </span>
                   </td>
 
-                  {/* Actions */}
                   <td className="py-3.5 px-4 text-right">
                     <RowActions
                       app={app}

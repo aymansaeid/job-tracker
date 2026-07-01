@@ -7,15 +7,16 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-// Stage number → display label
-export const STAGE_LABEL: Record<ApplicationStage, string> = {
-  [ApplicationStage.Applied]:   'Applied',
-  [ApplicationStage.InReview]: 'In Review',
-  [ApplicationStage.Interview]: 'Interview',
-  [ApplicationStage.Offer]:     'Offer',
-  [ApplicationStage.Rejected]:  'Rejected',
-  [ApplicationStage.Ghosted]: 'Ghosted',
-}
+// Ordered stages for Kanban columns, the Pipeline Rail, and the stage filter.
+// Stage → label/color/icon lives in one place: components/common/StageBadge.tsx
+export const STAGE_ORDER: ApplicationStage[] = [
+  ApplicationStage.Applied,
+  ApplicationStage.InReview,
+  ApplicationStage.Interview,
+  ApplicationStage.Offer,
+  ApplicationStage.Rejected,
+  ApplicationStage.Ghosted,
+]
 
 // Stage number → badge color classes
 export function stageColor(stage: ApplicationStage): string {
@@ -30,16 +31,16 @@ export function stageColor(stage: ApplicationStage): string {
   return map[stage]
 }
 
-// Ordered stages for Kanban columns
-export const STAGE_ORDER: ApplicationStage[] = [
-  ApplicationStage.Applied,
-  ApplicationStage.Interview,
-  ApplicationStage.Offer,
-  ApplicationStage.Rejected,
-  ApplicationStage.Ghosted
-]
+// Stage number → display label
+export const STAGE_LABEL: Record<ApplicationStage, string> = {
+  [ApplicationStage.Applied]:   'Applied',
+  [ApplicationStage.InReview]: 'In Review',
+  [ApplicationStage.Interview]: 'Interview',
+  [ApplicationStage.Offer]:     'Offer',
+  [ApplicationStage.Rejected]:  'Rejected',
+  [ApplicationStage.Ghosted]: 'Ghosted',
+}
 
-// Employment type number → display label
 export const EMPLOYMENT_LABEL: Record<EmploymentType, string> = {
   [EmploymentType.FullTime]:   'Full-time',
   [EmploymentType.PartTime]:   'Part-time',
@@ -47,7 +48,6 @@ export const EMPLOYMENT_LABEL: Record<EmploymentType, string> = {
   [EmploymentType.Internship]: 'Internship',
 }
 
-// "2 days ago" relative time
 export function timeAgo(dateString: string): string {
   const seconds = Math.floor((Date.now() - new Date(dateString).getTime()) / 1000)
   const intervals = [
@@ -65,7 +65,6 @@ export function timeAgo(dateString: string): string {
   return 'just now'
 }
 
-// Decode a JWT payload without any library
 export function decodeJWT(token: string): Record<string, unknown> | null {
   try {
     const payload = token.split('.')[1]

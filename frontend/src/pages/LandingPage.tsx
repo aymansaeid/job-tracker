@@ -1,15 +1,11 @@
 import { motion } from 'framer-motion'
 import { ArrowRight, Sparkles, Brain, Mail, BarChart3, Kanban, CheckCircle2, ChevronRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import type { Variants } from "framer-motion"
+import type { Variants } from 'framer-motion'
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 24 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.6 },
-  },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
 }
 
 const FEATURES = [
@@ -18,28 +14,28 @@ const FEATURES = [
     title: 'AI-Powered Tracking',
     desc: 'Our AI reads your Gmail and automatically detects interview invites, rejections, and offers.',
     color: 'text-cyan-400',
-    bg:    'bg-cyan-500/10 border-cyan-500/20',
+    bg: 'bg-cyan-500/10 border-cyan-500/20',
   },
   {
     icon: Kanban,
     title: 'Visual Kanban Board',
     desc: 'Drag and drop your applications through stages. See your entire pipeline at a glance.',
     color: 'text-violet-400',
-    bg:    'bg-violet-500/10 border-violet-500/20',
+    bg: 'bg-violet-500/10 border-violet-500/20',
   },
   {
     icon: BarChart3,
     title: 'Smart Dashboard',
     desc: 'Track response rates and application counts with a beautiful real-time dashboard.',
     color: 'text-emerald-400',
-    bg:    'bg-emerald-500/10 border-emerald-500/20',
+    bg: 'bg-emerald-500/10 border-emerald-500/20',
   },
   {
     icon: Mail,
     title: 'Gmail Integration',
     desc: 'One-click OAuth connection. We scan for patterns — your emails stay private.',
     color: 'text-sky-400',
-    bg:    'bg-sky-500/10 border-sky-500/20',
+    bg: 'bg-sky-500/10 border-sky-500/20',
   },
 ]
 
@@ -47,17 +43,14 @@ export default function LandingPage() {
   return (
     <div className="relative min-h-screen bg-surface-base overflow-hidden">
 
-      {/* Background orbs */}
       <div className="orb w-[500px] h-[500px] -top-32 -left-32 opacity-20"
            style={{ background: 'radial-gradient(circle, rgba(34,211,238,0.25) 0%, transparent 70%)' }} />
       <div className="orb w-[400px] h-[400px] top-1/2 -right-24 opacity-15"
            style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.3) 0%, transparent 70%)', animationDelay: '5s' }} />
-
-      {/* Grid overlay */}
       <div className="absolute inset-0 opacity-[0.03]"
            style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
+      <div className="noise-overlay absolute inset-0 pointer-events-none" />
 
-      {/* ── Navbar ───────────────────────────────────────── */}
       <motion.nav
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -84,31 +77,30 @@ export default function LandingPage() {
         </div>
       </motion.nav>
 
-      {/* ── Hero ─────────────────────────────────────────── */}
       <section className="relative z-10 max-w-6xl mx-auto px-6 pt-20 pb-32 text-center">
 
-        <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={0}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-white/10 text-xs font-medium text-slate-300 mb-8">
+        <motion.div variants={fadeUp} initial="hidden" animate="visible"
+                    className="glass inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium text-slate-300 mb-8">
           <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
           <Sparkles size={12} className="text-cyan-400" />
           AI-powered job application intelligence
           <ChevronRight size={12} className="text-slate-500" />
         </motion.div>
 
-        <motion.h1 variants={fadeUp} initial="hidden" animate="visible" custom={1}
+        <motion.h1 variants={fadeUp} initial="hidden" animate="visible"
                    className="font-display text-5xl md:text-7xl font-bold leading-[0.95] mb-6 tracking-tight">
           <span className="text-white">Stop guessing.</span>
           <br />
           <span className="gradient-text">Start knowing.</span>
         </motion.h1>
 
-        <motion.p variants={fadeUp} initial="hidden" animate="visible" custom={2}
+        <motion.p variants={fadeUp} initial="hidden" animate="visible"
                   className="text-lg text-slate-400 max-w-xl mx-auto mb-10 leading-relaxed">
           JobTracker uses AI to scan your Gmail, detect interview invites and rejections automatically,
           and keep your job search organised in a beautiful Kanban board.
         </motion.p>
 
-        <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={3}
+        <motion.div variants={fadeUp} initial="hidden" animate="visible"
                     className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link to="/register">
             <motion.button
@@ -132,7 +124,6 @@ export default function LandingPage() {
 
       </section>
 
-      {/* ── Features ─────────────────────────────────────── */}
       <section className="relative z-10 max-w-6xl mx-auto px-6 pb-28">
 
         <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}
@@ -147,12 +138,12 @@ export default function LandingPage() {
         </motion.div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {FEATURES.map((f, i) => (
+          {FEATURES.map((f) => (
             <motion.div
               key={f.title}
-              variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }} custom={i}
+              variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}
               whileHover={{ y: -4 }}
-              className={`glow-border glass rounded-2xl p-6 border ${f.bg}`}
+              className="glow-border glass rounded-2xl p-6"
             >
               <div className={`w-10 h-10 rounded-xl border flex items-center justify-center mb-4 ${f.bg}`}>
                 <f.icon size={20} className={f.color} />
@@ -165,11 +156,10 @@ export default function LandingPage() {
 
       </section>
 
-      {/* ── CTA Banner ───────────────────────────────────── */}
       <section className="relative z-10 max-w-4xl mx-auto px-6 pb-28">
         <motion.div
           variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}
-          className="glass rounded-3xl border border-white/10 p-12 text-center relative overflow-hidden"
+          className="glass rounded-3xl p-12 text-center relative overflow-hidden"
         >
           <div className="orb w-64 h-64 -top-16 -left-16 opacity-20"
                style={{ background: 'radial-gradient(circle, rgba(34,211,238,0.3) 0%, transparent 70%)' }} />
@@ -183,11 +173,7 @@ export default function LandingPage() {
               Free to start. No credit card required.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              {[
-                'AI Gmail scanning',
-                'Kanban board',
-                'Application history',
-              ].map((item) => (
+              {['AI Gmail scanning', 'Kanban board', 'Application history'].map((item) => (
                 <div key={item} className="flex items-center gap-2 text-sm text-slate-300">
                   <CheckCircle2 size={14} className="text-emerald-400" />
                   {item}
@@ -209,7 +195,6 @@ export default function LandingPage() {
         </motion.div>
       </section>
 
-      {/* ── Footer ───────────────────────────────────────── */}
       <footer className="relative z-10 border-t border-white/[0.06] py-8">
         <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
           <div className="flex items-center gap-2">

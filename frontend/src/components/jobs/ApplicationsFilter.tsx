@@ -1,7 +1,8 @@
-import { motion } from 'framer-motion'
-import { Search, Plus, SlidersHorizontal, Archive } from 'lucide-react'
-import { ApplicationStage } from '../../types'
-import { STAGE_LABEL, cn } from '../../lib/utils'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Search, Plus, SlidersHorizontal, Archive, ChevronDown } from 'lucide-react'
+import { useState, useRef, useEffect } from 'react'
+import { STAGE_ORDER, cn } from '../../lib/utils'
+import { STAGE_META } from '../common/StageBadge'
 
 interface Props {
   search:          string
@@ -12,13 +13,6 @@ interface Props {
   onToggleArchived: () => void
   onAdd:           () => void
 }
-
-const ALL_STAGES = Object.entries(STAGE_LABEL) as [string, string][]
-
-// ── Custom stage dropdown ─────────────────────────────────────
-import { useState, useRef, useEffect } from 'react'
-import { ChevronDown } from 'lucide-react'
-import { AnimatePresence } from 'framer-motion'
 
 function StageDropdown({
   value, onChange,
@@ -37,20 +31,24 @@ function StageDropdown({
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  const label = value !== null ? STAGE_LABEL[value as ApplicationStage] : 'All stages'
+  const activeMeta = value !== null ? STAGE_META[value as keyof typeof STAGE_META] : null
 
   return (
     <div ref={ref} className="relative">
       <button
         type="button"
         onClick={() => setOpen(v => !v)}
-        className="input-glass flex items-center gap-2 min-w-[160px] justify-between"
+        className="input-glass flex items-center gap-2 min-w-[170px] justify-between"
       >
         <div className="flex items-center gap-2">
-          <SlidersHorizontal size={14} className="text-slate-500" />
-          <span className="text-sm">{label}</span>
+          {activeMeta ? (
+            <span className="w-2 h-2 rounded-full shrink-0" style={{ background: activeMeta.color }} />
+          ) : (
+            <SlidersHorizontal size={14} className="text-slate-500 shrink-0" />
+          )}
+          <span className="text-sm">{activeMeta ? activeMeta.label : 'All stages'}</span>
         </div>
-        <ChevronDown size={14} className={cn('text-slate-500 transition-transform', open && 'rotate-180')} />
+        <ChevronDown size={14} className={cn('text-slate-500 transition-transform shrink-0', open && 'rotate-180')} />
       </button>
 
       <AnimatePresence>
@@ -60,33 +58,35 @@ function StageDropdown({
             animate={{ opacity: 1, y: 0,  scale: 1    }}
             exit={{    opacity: 0, y: -6, scale: 0.97 }}
             transition={{ duration: 0.15 }}
-            className="absolute top-full mt-1.5 left-0 z-30 glass rounded-xl border border-white/10 shadow-card overflow-hidden min-w-[160px]"
+            className="glass-raised absolute top-full mt-1.5 left-0 z-30 rounded-xl overflow-hidden min-w-[170px]"
           >
             <button
               onClick={() => { onChange(null); setOpen(false) }}
               className={cn(
-                'w-full text-left px-3.5 py-2.5 text-xs font-medium transition-colors',
-                value === null
-                  ? 'text-cyan-400 bg-cyan-500/10'
-                  : 'text-slate-300 hover:bg-white/[0.06]',
+                'w-full text-left px-3.5 py-2.5 text-xs font-medium transition-colors flex items-center gap-2',
+                value === null ? 'text-cyan-400 bg-cyan-500/10' : 'text-slate-300 hover:bg-white/[0.06]',
               )}
             >
+              <SlidersHorizontal size={12} className="shrink-0" />
               All stages
             </button>
-            {ALL_STAGES.map(([val, lbl]) => (
-              <button
-                key={val}
-                onClick={() => { onChange(Number(val)); setOpen(false) }}
-                className={cn(
-                  'w-full text-left px-3.5 py-2.5 text-xs font-medium transition-colors',
-                  value === Number(val)
-                    ? 'text-cyan-400 bg-cyan-500/10'
-                    : 'text-slate-300 hover:bg-white/[0.06]',
-                )}
-              >
-                {lbl}
-              </button>
-            ))}
+            {STAGE_ORDER.map((stage) => {
+              const meta = STAGE_META[stage]
+              return (
+                <button
+                  key={stage}
+                  onClick={() => { onChange(stage); setOpen(false) }}
+                  className={cn(
+                    'w-full text-left px-3.5 py-2.5 text-xs font-medium transition-colors flex items-center gap-2',
+                    value === stage ? 'bg-white/[0.06]' : 'text-slate-300 hover:bg-white/[0.06]',
+                  )}
+                  style={value === stage ? { color: meta.color } : undefined}
+                >
+                  <span className="w-2 h-2 rounded-full shrink-0" style={{ background: meta.color }} />
+                  {meta.label}
+                </button>
+              )
+            })}
           </motion.div>
         )}
       </AnimatePresence>
@@ -101,7 +101,6 @@ export default function ApplicationsFilter({
   return (
     <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
 
-      {/* Search */}
       <div className="relative flex-1 min-w-[200px]">
         <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
         <input
@@ -112,10 +111,8 @@ export default function ApplicationsFilter({
         />
       </div>
 
-      {/* Stage filter */}
       <StageDropdown value={stageFilter} onChange={onStageFilter} />
 
-      {/* Archive toggle */}
       <motion.button
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.97 }}
@@ -131,7 +128,6 @@ export default function ApplicationsFilter({
         {showArchived ? 'Hide Archived' : 'Show Archived'}
       </motion.button>
 
-      {/* Add button */}
       <motion.button
         whileHover={{ scale: 1.03, y: -1 }}
         whileTap={{ scale: 0.97 }}

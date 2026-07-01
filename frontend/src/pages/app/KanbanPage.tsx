@@ -3,8 +3,11 @@ import { motion } from 'framer-motion'
 import { Kanban } from 'lucide-react'
 import { applicationsApi } from '../../lib/api'
 import type { JobApplication, PaginatedResponse, ApplicationStage } from '../../types'
-import { STAGE_ORDER, STAGE_LABEL } from '../../lib/utils'
+import { STAGE_ORDER } from '../../lib/utils'
+import { STAGE_META } from '../../components/common/StageBadge'
 import KanbanBoard from '../../components/kanban/KanbanBoard'
+
+const EASE = [0.16, 1, 0.3, 1] as const
 
 export default function KanbanPage() {
   const queryClient = useQueryClient()
@@ -21,7 +24,6 @@ export default function KanbanPage() {
     mutationFn: ({ id, stage }: { id: number; stage: ApplicationStage }) =>
       applicationsApi.changeStage(id, { stage }),
 
-    // Optimistic update
     onMutate: async ({ id, stage }) => {
       await queryClient.cancelQueries({ queryKey: ['applications-kanban'] })
       const previous = queryClient.getQueryData<PaginatedResponse<JobApplication>>(['applications-kanban'])
@@ -51,20 +53,18 @@ export default function KanbanPage() {
 
   const applications = data?.items ?? []
 
-  // Count per stage for the header
   const stageCounts = STAGE_ORDER.reduce<Record<number, number>>((acc, stage) => {
     acc[stage] = applications.filter(a => a.currentStage === stage && !a.isArchived).length
     return acc
   }, {})
 
-  // ── Skeleton ──────────────────────────────────────────────
   if (isLoading) {
     return (
-      <div className="flex gap-3 overflow-x-auto pb-6 -mx-6 px-6">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="w-[280px] shrink-0 animate-pulse">
+      <div className="flex gap-4 overflow-x-auto pb-6 -mx-6 px-6">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="w-[292px] shrink-0 animate-pulse">
             <div className="h-7 w-24 rounded-full bg-white/[0.06] mb-3" />
-            <div className="rounded-2xl border border-dashed border-white/[0.05] p-2 space-y-2 min-h-[300px]">
+            <div className="rounded-2xl border border-white/[0.06] p-2.5 space-y-2 min-h-[300px]">
               {Array.from({ length: Math.max(1, 3 - i) }).map((_, j) => (
                 <div key={j} className="rounded-xl bg-white/[0.03] border border-white/[0.05] p-4 space-y-2.5">
                   <div className="flex items-center gap-2">
@@ -83,7 +83,6 @@ export default function KanbanPage() {
     )
   }
 
-  // ── Empty state ───────────────────────────────────────────
   if (applications.length === 0) {
     return (
       <motion.div
@@ -102,31 +101,32 @@ export default function KanbanPage() {
     )
   }
 
-  // ── Board ─────────────────────────────────────────────────
   return (
     <div className="space-y-5">
 
-      {/* Summary strip */}
       <motion.div
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0  }}
-        className="flex items-center gap-3 flex-wrap"
+        transition={{ duration: 0.4, ease: EASE }}
+        className="glass flex items-center gap-1 flex-wrap rounded-2xl px-4 py-3"
       >
-        {STAGE_ORDER.map(stage => (
-          <div
-            key={stage}
-            className="flex items-center gap-1.5 text-xs text-slate-500"
-          >
-            <span className="font-bold text-slate-300">{stageCounts[stage]}</span>
-            {STAGE_LABEL[stage]}
-          </div>
-        ))}
-        <span className="ml-auto text-xs text-slate-600">
+        {STAGE_ORDER.map(stage => {
+          const meta = STAGE_META[stage]
+          return (
+            <div key={stage} className="flex items-center gap-2 px-3 py-1.5 rounded-xl">
+              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: meta.color }} />
+              <span className="font-mono text-sm font-semibold" style={{ color: meta.color }}>
+                {stageCounts[stage]}
+              </span>
+              <span className="text-xs text-slate-500">{meta.label}</span>
+            </div>
+          )
+        })}
+        <span className="ml-auto font-mono text-xs text-slate-600 pr-1">
           {applications.filter(a => !a.isArchived).length} total
         </span>
       </motion.div>
 
-      {/* Board */}
       <KanbanBoard
         applications={applications}
         onStageChange={(id, stage) => stageMutation.mutate({ id, stage })}

@@ -10,23 +10,19 @@ import { AxiosError } from 'axios'
 import type { User } from '../../types'
 
 export default function GmailIntegration() {
-  const user    = useAuthStore(s => s.user)
+  const user = useAuthStore(s => s.user)
   const setUser = useAuthStore(s => s.setUser)
 
-  const [fetching,  setFetching]  = useState(true)
-  const [loading,   setLoading]   = useState(false)
+  const [fetching, setFetching] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [serverErr, setServerErr] = useState<string | null>(null)
 
   const isConnected = !!user?.googleRefreshToken
 
-  // Fetch real profile to get actual googleRefreshToken value
   const fetchProfile = useCallback(async () => {
     if (!user?.id) { setFetching(false); return }
     try {
       const res = await usersApi.getProfile(user.id)
-
-      console.log("PROFILE DATA FROM BACKEND:", res.data) 
-
       setUser(res.data as User)
     } catch {
       // ignore — we tried
@@ -39,7 +35,6 @@ export default function GmailIntegration() {
     fetchProfile()
   }, [fetchProfile])
 
-  // ── Open OAuth in popup, listen for C# success message ────────────
   const handleConnect = async () => {
     setLoading(true)
     setServerErr(null)
@@ -48,36 +43,23 @@ export default function GmailIntegration() {
       const url = res.data?.url as string
       if (!url) throw new Error('No auth URL returned')
 
-      // Open popup — not full redirect
-      const popup = window.open(
-        url,
-        'gmail-oauth',
-        'width=600,height=700,left=400,top=100,scrollbars=yes',
-      )
+      const popup = window.open(url, 'gmail-oauth', 'width=600,height=700,left=400,top=100,scrollbars=yes')
 
       if (!popup) {
-        // Blocked by browser — fall back to redirect
         window.location.href = url
         return
       }
 
-      // FIX: Replace setInterval with a Message Listener
       const handleMessage = async (event: MessageEvent) => {
-        // When C# sends the success message, trigger the update
         if (event.data === 'google_auth_success') {
-          window.removeEventListener('message', handleMessage) // Clean up listener
+          window.removeEventListener('message', handleMessage)
           setLoading(false)
           setFetching(true)
-          await fetchProfile() // This fetches the token and updates Zustand!
+          await fetchProfile()
         }
       }
 
-      // Start listening for the C# backend to shout "Success!"
       window.addEventListener('message', handleMessage)
-
-      // Fallback: If they manually close the window and get stuck loading, 
-      // they can just click the 'Refresh status' button later.
-
     } catch (err) {
       const e = err as AxiosError<{ message?: string }>
       setServerErr(e.response?.data?.message ?? 'Failed to get Google auth URL.')
@@ -102,10 +84,8 @@ export default function GmailIntegration() {
   return (
     <div className="space-y-4">
 
-      {/* Status + connect card */}
-      <div className="glass rounded-2xl border border-white/10 overflow-hidden">
+      <div className="glass rounded-2xl overflow-hidden">
 
-        {/* Top band */}
         <div className="flex items-center justify-between gap-4 px-6 py-5 border-b border-white/[0.07]">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-red-500/15 border border-red-500/25 flex items-center justify-center">
@@ -117,7 +97,6 @@ export default function GmailIntegration() {
             </div>
           </div>
 
-          {/* Status pill */}
           {fetching ? (
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08]">
               <Loader2 size={11} className="animate-spin text-slate-500" />
@@ -138,24 +117,18 @@ export default function GmailIntegration() {
 
         <div className="px-6 py-5 space-y-4">
 
-          {/* Connected state */}
           <AnimatePresence>
             {!fetching && isConnected && (
               <motion.div
-                initial={{ opacity: 0, y: -8 }}
-                animate={{ opacity: 1, y: 0  }}
-                exit={{ opacity: 0 }}
+                initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
                 className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-4"
               >
                 <div className="flex items-start gap-3">
                   <Sparkles size={15} className="text-emerald-400 mt-0.5 shrink-0" />
                   <div>
-                    <p className="text-sm font-semibold text-emerald-300 mb-0.5">
-                      AI scanning is active
-                    </p>
+                    <p className="text-sm font-semibold text-emerald-300 mb-0.5">AI scanning is active</p>
                     <p className="text-xs text-emerald-400/70 leading-relaxed">
-                      Gmail is connected. Use "Sync Gmail" in the top bar to scan
-                      for new interview invites, rejections, and offers.
+                      Gmail is connected. Use "Sync Gmail" in the top bar to scan for new interview invites, rejections, and offers.
                     </p>
                   </div>
                 </div>
@@ -163,22 +136,16 @@ export default function GmailIntegration() {
             )}
           </AnimatePresence>
 
-          {/* Description */}
           {!isConnected && !fetching && (
             <p className="text-sm text-slate-400 leading-relaxed">
-              Connect your Gmail so our AI can detect interview invites,
-              rejections, and offers — surfacing them as one-click suggestions
-              on your dashboard.
+              Connect your Gmail so our AI can detect interview invites, rejections, and offers — surfacing them as one-click suggestions on your dashboard.
             </p>
           )}
 
-          {/* Privacy box */}
           <div className="rounded-xl bg-white/[0.02] border border-white/[0.06] p-4 space-y-2">
             <div className="flex items-center gap-2 mb-2">
               <Shield size={12} className="text-slate-500" />
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600">
-                Privacy & Access
-              </p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600">Privacy & Access</p>
             </div>
             {[
               'Read-only access to email subjects and senders',
@@ -192,7 +159,6 @@ export default function GmailIntegration() {
             ))}
           </div>
 
-          {/* Error */}
           <AnimatePresence>
             {serverErr && (
               <motion.div
@@ -205,7 +171,6 @@ export default function GmailIntegration() {
             )}
           </AnimatePresence>
 
-          {/* Buttons */}
           {!fetching && (
             <div className="flex items-center gap-3 pt-1">
               {isConnected ? (
@@ -216,10 +181,7 @@ export default function GmailIntegration() {
                     disabled={loading}
                     className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border border-red-500/25 text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-60"
                   >
-                    {loading
-                      ? <><Loader2 size={13} className="animate-spin" /> Disconnecting…</>
-                      : <><Unlink size={13} /> Disconnect</>
-                    }
+                    {loading ? <><Loader2 size={13} className="animate-spin" /> Disconnecting…</> : <><Unlink size={13} /> Disconnect</>}
                   </motion.button>
                   <motion.button
                     whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
@@ -236,10 +198,7 @@ export default function GmailIntegration() {
                   disabled={loading}
                   className="btn-primary flex items-center gap-2 px-6 py-2.5 shadow-glow-cyan disabled:opacity-60"
                 >
-                  {loading
-                    ? <><Loader2 size={13} className="animate-spin" /> Opening…</>
-                    : <><ExternalLink size={13} /> Connect Gmail</>
-                  }
+                  {loading ? <><Loader2 size={13} className="animate-spin" /> Opening…</> : <><ExternalLink size={13} /> Connect Gmail</>}
                 </motion.button>
               )}
             </div>

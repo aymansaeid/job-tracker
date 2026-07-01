@@ -9,7 +9,7 @@ import { AxiosError } from 'axios'
 import { authApi } from '../../lib/api'
 import { useAuthStore } from '../../store/authStore'
 import type { AuthResponse } from '../../types'
-import type { Variants } from "framer-motion"
+import type { Variants } from 'framer-motion'
 import { decodeJWT } from '../../lib/utils'
 
 const schema = z.object({
@@ -29,11 +29,11 @@ type FormData = z.infer<typeof schema>
 function passwordStrength(pw: string) {
   if (!pw) return { score: 0, label: '', color: '' }
   let s = 0
-  if (pw.length >= 8)            s++
-  if (pw.length >= 12)           s++
+  if (pw.length >= 8)           s++
+  if (pw.length >= 12)          s++
   if (/[A-Z]/.test(pw))         s++
   if (/[0-9]/.test(pw))         s++
-  if (/[^A-Za-z0-9]/.test(pw)) s++
+  if (/[^A-Za-z0-9]/.test(pw))  s++
   if (s <= 1) return { score: s, label: 'Weak',   color: 'bg-red-500' }
   if (s <= 2) return { score: s, label: 'Fair',   color: 'bg-yellow-500' }
   if (s <= 3) return { score: s, label: 'Good',   color: 'bg-blue-500' }
@@ -55,68 +55,67 @@ const field = {
 }
 
 export default function RegisterPage() {
-  const navigate  = useNavigate()
-  const setAuth   = useAuthStore((s) => s.setAuth)
-  const [showPw, setShowPw]         = useState(false)
-  const [showCf, setShowCf]         = useState(false)
-  const [pw, setPw]                 = useState('')
-  const [serverErr, setServerErr]   = useState<string | null>(null)
+  const navigate = useNavigate()
+  const setAuth = useAuthStore((s) => s.setAuth)
+  const [showPw, setShowPw] = useState(false)
+  const [showCf, setShowCf] = useState(false)
+  const [pw, setPw] = useState('')
+  const [serverErr, setServerErr] = useState<string | null>(null)
   const strength = useMemo(() => passwordStrength(pw), [pw])
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } =
     useForm<FormData>({ resolver: zodResolver(schema) })
 
- const onSubmit = async (data: FormData) => {
-  setServerErr(null)
-  try {
-    const res = await authApi.register({
-      fullName: data.fullName,
-      email:    data.email,
-      password: data.password,
-    })
-    const { token } = res.data as AuthResponse
+  const onSubmit = async (data: FormData) => {
+    setServerErr(null)
+    try {
+      const res = await authApi.register({
+        fullName: data.fullName,
+        email: data.email,
+        password: data.password,
+      })
+      const { token } = res.data as AuthResponse
 
-    const decoded = decodeJWT(token)
-    const userId  = (decoded?.['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier']
-      ?? decoded?.sub
-      ?? decoded?.nameid
-      ?? decoded?.id
-      ?? 0) as number
+      const decoded = decodeJWT(token)
+      const userId = (decoded?.['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier']
+        ?? decoded?.sub
+        ?? decoded?.nameid
+        ?? decoded?.id
+        ?? 0) as number
 
-    setAuth(
-      { id: Number(userId), email: data.email, fullName: data.fullName },
-      token,
-    )
-    navigate('/app/dashboard', { replace: true })
-  } catch (err) {
-    const e = err as AxiosError<{ message?: string }>
-    setServerErr(e.response?.data?.message ?? 'Something went wrong. Please try again.')
+      setAuth(
+        { id: Number(userId), email: data.email, fullName: data.fullName },
+        token,
+      )
+      navigate('/app/dashboard', { replace: true })
+    } catch (err) {
+      const e = err as AxiosError<{ message?: string }>
+      setServerErr(e.response?.data?.message ?? 'Something went wrong. Please try again.')
+    }
   }
-}
 
   return (
     <motion.div
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       className="min-h-screen bg-surface-base flex items-center justify-center px-4 py-16 relative overflow-hidden"
     >
-      {/* Orbs */}
       <div className="orb w-96 h-96 -top-24 -left-24 opacity-15"
            style={{ background: 'radial-gradient(circle, rgba(34,211,238,0.3) 0%, transparent 70%)' }} />
       <div className="orb w-80 h-80 -bottom-20 -right-20 opacity-15"
            style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.3) 0%, transparent 70%)', animationDelay: '5s' }} />
+      <div className="noise-overlay absolute inset-0 pointer-events-none" />
 
-      {/* Logo */}
-      <Link to="/" className="absolute top-6 left-6 flex items-center gap-2">
+      <Link to="/" className="absolute top-6 left-6 flex items-center gap-2 z-10">
         <div className="w-8 h-8 rounded-lg bg-gradient-brand flex items-center justify-center">
           <Sparkles size={15} className="text-white" />
         </div>
         <span className="font-display font-bold text-white">JobTracker</span>
       </Link>
 
-      <motion.div variants={cardVariants} initial="initial" animate="animate" className="relative w-full max-w-md">
+      <motion.div variants={cardVariants} initial="initial" animate="animate" className="relative z-10 w-full max-w-md">
         <div className="absolute -inset-px rounded-2xl bg-gradient-to-br from-violet-500/15 via-transparent to-cyan-500/15 blur-sm" />
 
-        <div className="relative glass rounded-2xl border border-white/10 p-8 shadow-card">
+        <div className="glass-raised relative rounded-2xl p-8">
           <motion.div variants={stagger} initial="initial" animate="animate">
 
             <motion.div variants={field} className="mb-7">
@@ -136,7 +135,6 @@ export default function RegisterPage() {
                 )}
               </AnimatePresence>
 
-              {/* Full name */}
               <motion.div variants={field}>
                 <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
                   Full name
@@ -150,7 +148,6 @@ export default function RegisterPage() {
                 )}
               </motion.div>
 
-              {/* Email */}
               <motion.div variants={field}>
                 <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
                   Email address
@@ -164,7 +161,6 @@ export default function RegisterPage() {
                 )}
               </motion.div>
 
-              {/* Password */}
               <motion.div variants={field}>
                 <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
                   Password
@@ -180,12 +176,11 @@ export default function RegisterPage() {
                   </button>
                 </div>
 
-                {/* Strength meter */}
                 <AnimatePresence>
                   {pw && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="mt-2">
                       <div className="flex gap-1 mb-1">
-                        {[1,2,3,4,5].map(seg => (
+                        {[1, 2, 3, 4, 5].map(seg => (
                           <div key={seg} className="h-1 flex-1 rounded-full bg-white/[0.06] overflow-hidden">
                             <motion.div
                               animate={{ width: strength.score >= seg ? '100%' : '0%' }}
@@ -207,7 +202,6 @@ export default function RegisterPage() {
                 )}
               </motion.div>
 
-              {/* Confirm password */}
               <motion.div variants={field}>
                 <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
                   Confirm password
@@ -228,7 +222,6 @@ export default function RegisterPage() {
                 )}
               </motion.div>
 
-              {/* Perks list */}
               <motion.div variants={field} className="flex flex-wrap gap-x-4 gap-y-1.5">
                 {['AI Gmail scanning', 'Kanban board', 'Application history'].map(item => (
                   <div key={item} className="flex items-center gap-1.5 text-xs text-slate-400">
@@ -238,7 +231,6 @@ export default function RegisterPage() {
                 ))}
               </motion.div>
 
-              {/* Submit */}
               <motion.div variants={field} className="pt-1">
                 <motion.button type="submit" disabled={isSubmitting}
                                whileHover={isSubmitting ? {} : { scale: 1.02, y: -1 }}

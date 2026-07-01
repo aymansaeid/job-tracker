@@ -10,6 +10,7 @@ export default {
       fontFamily: {
         display: ['Syne', 'sans-serif'],
         sans:    ['DM Sans', 'sans-serif'],
+        mono:    ['JetBrains Mono', 'ui-monospace', 'monospace'],
       },
       colors: {
         surface: {
@@ -17,6 +18,9 @@ export default {
           DEFAULT: '#080d1a',
           elevated:'#0d1425',
         },
+      },
+      backgroundImage: {
+        'gradient-brand': 'linear-gradient(135deg, #22d3ee 0%, #8b5cf6 100%)',
       },
       boxShadow: {
         'glow-cyan':   '0 0 40px rgba(34, 211, 238, 0.15)',
@@ -29,9 +33,14 @@ export default {
           '33%':      { transform: 'translate(30px,-20px) scale(1.05)' },
           '66%':      { transform: 'translate(-20px,15px) scale(0.95)' },
         },
+        'scan-line': {
+          '0%':   { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(100%)' },
+        },
       },
       animation: {
-        'float': 'orb-float 12s ease-in-out infinite',
+        'float':     'orb-float 12s ease-in-out infinite',
+        'scan-line': 'scan-line 2.6s linear infinite',
       },
     },
   },

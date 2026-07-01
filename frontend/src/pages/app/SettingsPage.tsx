@@ -1,9 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState } from 'react'
-import {
-  User, Lock, Mail, ChevronRight,
-  Sparkles,
-} from 'lucide-react'
+import { User, Lock, Mail, ChevronRight, Sparkles } from 'lucide-react'
 import ProfileForm      from '../../components/settings/ProfileForm'
 import PasswordForm     from '../../components/settings/PasswordForm'
 import GmailIntegration from '../../components/settings/GmailIntegration'
@@ -12,28 +9,16 @@ import { useAuthStore } from '../../store/authStore'
 
 const SECTIONS = [
   {
-    id: 'profile',
-    label: 'Profile',
-    description: 'Your name and email',
-    icon: User,
-    color: 'text-cyan-400',
-    bg: 'bg-cyan-500/10 border-cyan-500/20',
+    id: 'profile', label: 'Profile', description: 'Your name and email',
+    icon: User, color: 'text-cyan-400', bg: 'bg-cyan-500/10 border-cyan-500/20',
   },
   {
-    id: 'password',
-    label: 'Password',
-    description: 'Change your password',
-    icon: Lock,
-    color: 'text-violet-400',
-    bg: 'bg-violet-500/10 border-violet-500/20',
+    id: 'password', label: 'Password', description: 'Change your password',
+    icon: Lock, color: 'text-violet-400', bg: 'bg-violet-500/10 border-violet-500/20',
   },
   {
-    id: 'integrations',
-    label: 'Integrations',
-    description: 'Gmail & AI scanning',
-    icon: Mail,
-    color: 'text-red-400',
-    bg: 'bg-red-500/10 border-red-500/20',
+    id: 'integrations', label: 'Integrations', description: 'Gmail & AI scanning',
+    icon: Mail, color: 'text-red-400', bg: 'bg-red-500/10 border-red-500/20',
   },
 ] as const
 
@@ -48,11 +33,9 @@ export default function SettingsPage() {
   return (
     <div className="flex gap-6 items-start">
 
-      {/* ── Left sidebar ─────────────────────────────────── */}
       <div className="w-64 shrink-0 space-y-3">
 
-        {/* User card */}
-        <div className="glass rounded-2xl border border-white/10 p-5">
+        <div className="glass rounded-2xl p-5">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-400 to-violet-500 flex items-center justify-center shrink-0">
               <span className="font-display font-bold text-white text-lg">
@@ -68,8 +51,7 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* Nav items */}
-        <div className="glass rounded-2xl border border-white/10 overflow-hidden">
+        <div className="glass rounded-2xl overflow-hidden">
           {SECTIONS.map((section, i) => {
             const isActive = active === section.id
             return (
@@ -80,12 +62,9 @@ export default function SettingsPage() {
                 className={cn(
                   'w-full flex items-center gap-3 px-4 py-3.5 text-left transition-all relative',
                   i !== 0 && 'border-t border-white/[0.05]',
-                  isActive
-                    ? 'bg-white/[0.05]'
-                    : 'hover:bg-white/[0.03]',
+                  isActive ? 'bg-white/[0.05]' : 'hover:bg-white/[0.03]',
                 )}
               >
-                {/* Active indicator */}
                 {isActive && (
                   <motion.div
                     layoutId="settings-active"
@@ -94,39 +73,27 @@ export default function SettingsPage() {
                   />
                 )}
 
-                <div className={cn(
-                  'w-8 h-8 rounded-lg border flex items-center justify-center shrink-0',
-                  section.bg,
-                )}>
+                <div className={cn('w-8 h-8 rounded-lg border flex items-center justify-center shrink-0', section.bg)}>
                   <section.icon size={15} className={section.color} />
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <p className={cn(
-                    'text-sm font-semibold truncate',
-                    isActive ? 'text-white' : 'text-slate-300',
-                  )}>
+                  <p className={cn('text-sm font-semibold truncate', isActive ? 'text-white' : 'text-slate-300')}>
                     {section.label}
                   </p>
-                  <p className="text-[10px] text-slate-600 truncate">
-                    {section.description}
-                  </p>
+                  <p className="text-[10px] text-slate-600 truncate">{section.description}</p>
                 </div>
 
                 <ChevronRight
                   size={13}
-                  className={cn(
-                    'shrink-0 transition-colors',
-                    isActive ? 'text-slate-400' : 'text-slate-700',
-                  )}
+                  className={cn('shrink-0 transition-colors', isActive ? 'text-slate-400' : 'text-slate-700')}
                 />
               </motion.button>
             )
           })}
         </div>
 
-        {/* Info card */}
-        <div className="glass rounded-2xl border border-white/10 p-4">
+        <div className="glass rounded-2xl p-4">
           <div className="flex items-center gap-2 mb-2">
             <Sparkles size={13} className="text-cyan-400" />
             <p className="text-xs font-bold text-slate-400">JobTracker AI</p>
@@ -139,37 +106,29 @@ export default function SettingsPage() {
 
       </div>
 
-      {/* ── Right content ─────────────────────────────────── */}
       <div className="flex-1 min-w-0">
 
-        {/* Section header */}
         <motion.div
           key={active}
           initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0  }}
+          animate={{ opacity: 1, y: 0 }}
           className="flex items-center gap-3 mb-6"
         >
-          <div className={cn(
-            'w-10 h-10 rounded-xl border flex items-center justify-center',
-            activeSection.bg,
-          )}>
+          <div className={cn('w-10 h-10 rounded-xl border flex items-center justify-center', activeSection.bg)}>
             <activeSection.icon size={18} className={activeSection.color} />
           </div>
           <div>
-            <h2 className="font-display font-bold text-white text-lg">
-              {activeSection.label}
-            </h2>
+            <h2 className="font-display font-bold text-white text-lg">{activeSection.label}</h2>
             <p className="text-xs text-slate-500">{activeSection.description}</p>
           </div>
         </motion.div>
 
-        {/* Content panel */}
         <AnimatePresence mode="wait">
           <motion.div
             key={active}
             initial={{ opacity: 0, x: 12 }}
-            animate={{ opacity: 1, x: 0  }}
-            exit={{    opacity: 0, x: -8 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -8 }}
             transition={{ duration: 0.25 }}
           >
             {active === 'profile'      && <ProfileForm />}
