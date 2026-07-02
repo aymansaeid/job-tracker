@@ -29,9 +29,21 @@ public class SuggestionService : ISuggestionService
         var recentEmails = await _gmailService.GetRecentJobEmailsAsync(userId, 10);
         int newSuggestionsCount = 0;
 
-        foreach (var email in recentEmails)
+        // 💡 FIX 1: Filter out duplicate MessageIds from Gmail right away
+        var uniqueEmails = recentEmails
+            .GroupBy(e => e.MessageId)
+            .Select(g => g.First())
+            .ToList();
+
+        // 💡 FIX 2: In-memory tracker for this specific batch
+        var processedInThisBatch = new HashSet<string>();
+
+        foreach (var email in uniqueEmails)
         {
-            // 2. Skip if we already parsed this email
+            // Prevent processing the exact same MessageId twice in this loop
+            if (!processedInThisBatch.Add(email.MessageId)) continue;
+
+            // 2. Skip if we already parsed this email in a previous sync
             bool alreadyProcessed = await _context.JobUpdateSuggestions
                 .AnyAsync(x => x.MessageId == email.MessageId);
 
@@ -55,7 +67,6 @@ public class SuggestionService : ISuggestionService
                     CompanyName = aiResult.CompanyName,
                     JobTitle = aiResult.JobTitle,
 
-                    // 🚨 NEW V3 FIELDS: Assumes you added Location and ExtraNotes to your JobUpdateSuggestion entity!
                     Location = aiResult.Location,
                     ExtraNotes = aiResult.ExtraNotes,
 
@@ -74,7 +85,26 @@ public class SuggestionService : ISuggestionService
 
         if (newSuggestionsCount > 0)
         {
-            await _context.SaveChangesAsync();
+            // 💡 FIX 3: Wrap the DB save in a try-catch to prevent 500 errors
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                // A duplicate key or constraint violation happened (e.g., race condition).
+                // Clear the tracker so these bad entities don't poison the next request.
+                _context.ChangeTracker.Clear();
+
+                // Return 0 because we didn't actually save anything successfully.
+                return 0;
+            }
+            catch (Exception)
+            {
+                // Catch any other weird DB glitches
+                _context.ChangeTracker.Clear();
+                return 0;
+            }
         }
 
         return newSuggestionsCount;

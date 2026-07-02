@@ -3,24 +3,32 @@ using JobTracker.Application.Interfaces;
 using JobTracker.Domain.Entities;
 using JobTracker.Domain.Enums;
 using JobTracker.Infrastructure.Persistence;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Amazon.S3;
+using Amazon.S3.Model;
 
 namespace JobTracker.Infrastructure.Services;
-// i am gona change it to aws3 later
+
 public class DocumentService : IDocumentService
 {
     private readonly ApplicationDbContext _context;
-    private readonly IWebHostEnvironment _env;
+    private readonly IAmazonS3 _s3Client;
+    private readonly string _bucketName;
+    private readonly string _publicUrl;
 
     // 5MB limit
     private const long MaxFileSizeBytes = 5 * 1024 * 1024;
 
-    public DocumentService(ApplicationDbContext context, IWebHostEnvironment env)
+    public DocumentService(ApplicationDbContext context, IAmazonS3 s3Client, IConfiguration config)
     {
         _context = context;
-        _env = env;
+        _s3Client = s3Client;
+
+        // Pull config values directly
+        _bucketName = config["CloudflareR2:BucketName"];
+        _publicUrl = config["CloudflareR2:PublicUrl"].TrimEnd('/');
     }
 
     public async Task<List<UserDocument>> GetUserDocumentsAsync(int userId)
@@ -45,15 +53,15 @@ public class DocumentService : IDocumentService
         if (!allowedExtensions.Contains(extension))
             throw new ArgumentException("Invalid file type. Only PDF, Word, and Images are allowed.");
 
-        // 2. ENFORCE YOUR HARD LIMITS
+        // 2. Enforce Hard Limits
         var currentCount = await _context.UserDocuments
             .CountAsync(d => d.UserId == userId && d.Category == category);
 
         int maxAllowed = category switch
         {
-            DocumentCategory.Resume => 5,
-            DocumentCategory.Certificate => 10,
-            DocumentCategory.ImportantDocument => 5,
+            DocumentCategory.Resume => 3,
+            DocumentCategory.Certificate => 4,
+            DocumentCategory.ImportantDocument => 3,
             _ => throw new ArgumentException("Invalid document category.")
         };
 
@@ -69,33 +77,37 @@ public class DocumentService : IDocumentService
 
             foreach (var doc in existingPrimary)
             {
-                doc.IsPrimary = false; // Remove primary from older resumes
+                doc.IsPrimary = false;
             }
         }
 
-        // 4. Save the file to the Server (wwwroot/uploads)
-        var uploadFolder = Path.Combine(_env.WebRootPath ?? _env.ContentRootPath, "uploads", userId.ToString());
-        if (!Directory.Exists(uploadFolder))
-            Directory.CreateDirectory(uploadFolder);
-
-        // Security: Never trust user filenames. Generate a unique GUID.
+        // 4. STREAM TO CLOUDFLARE R2 ☁️
         var secureFileName = $"{Guid.NewGuid()}{extension}";
-        var filePath = Path.Combine(uploadFolder, secureFileName);
+        var s3ObjectKey = $"uploads/user_{userId}/{secureFileName}"; // Organizes buckets into neat folders
 
-        using (var stream = new FileStream(filePath, FileMode.Create))
+        using (var stream = file.OpenReadStream())
         {
-            await file.CopyToAsync(stream);
+            var putRequest = new PutObjectRequest
+            {
+                BucketName = _bucketName,
+                Key = s3ObjectKey,
+                InputStream = stream,
+                ContentType = file.ContentType,
+                DisablePayloadSigning = true // R2 optimization
+            };
+
+            await _s3Client.PutObjectAsync(putRequest);
         }
 
         // 5. Save metadata to Database
-        // We store the relative path so the frontend can easily download it like: https://localhost:5001/uploads/1/uuid.pdf
-        var relativePath = $"/uploads/{userId}/{secureFileName}";
+        // We save the full public Cloudflare URL so the React app can just drop it into an <a href> tag
+        var fullFileUrl = $"{_publicUrl}/{s3ObjectKey}";
 
         var newDocument = new UserDocument
         {
             UserId = userId,
-            FileName = file.FileName, // Keep the original name for the UI
-            FilePath = relativePath,
+            FileName = file.FileName,
+            FilePath = fullFileUrl, // Now stores the cloud URL, not local path
             ContentType = file.ContentType,
             FileSizeBytes = file.Length,
             Category = category,
@@ -116,7 +128,6 @@ public class DocumentService : IDocumentService
 
         if (targetDoc == null) return false;
 
-        // Unmark all other resumes
         var allResumes = await _context.UserDocuments
             .Where(d => d.UserId == userId && d.Category == DocumentCategory.Resume)
             .ToListAsync();
@@ -137,16 +148,21 @@ public class DocumentService : IDocumentService
 
         if (doc == null) return false;
 
-        // Delete physical file from server
-        var fullPath = Path.Combine(_env.WebRootPath ?? _env.ContentRootPath, doc.FilePath.TrimStart('/'));
-        if (File.Exists(fullPath))
+        // Extract the exact S3 key from the full URL
+        var s3ObjectKey = doc.FilePath.Replace($"{_publicUrl}/", "");
+
+        // DELETE FROM CLOUDFLARE R2 🗑️
+        var deleteRequest = new DeleteObjectRequest
         {
-            File.Delete(fullPath);
-        }
+            BucketName = _bucketName,
+            Key = s3ObjectKey
+        };
+        await _s3Client.DeleteObjectAsync(deleteRequest);
 
         // Delete from database
         _context.UserDocuments.Remove(doc);
         await _context.SaveChangesAsync();
+
         return true;
     }
 }

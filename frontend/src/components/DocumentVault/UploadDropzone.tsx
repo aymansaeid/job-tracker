@@ -4,7 +4,7 @@ import { UploadCloud, Loader2, Server, AlertTriangle } from 'lucide-react'
 import { useDocumentStore } from '../../store/useDocumentStore'
 import { cn } from '../../lib/utils'
 
-const MAX_LIMITS: Record<number, number> = { 1: 5, 2: 10, 3: 5 }
+const MAX_LIMITS: Record<number, number> = { 1: 3, 2: 4, 3: 3 }
 
 export default function UploadDropzone({ activeTab }: { activeTab: number }) {
   const { documents, uploadDocument, isUploading } = useDocumentStore()

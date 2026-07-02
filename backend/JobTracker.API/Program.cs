@@ -1,9 +1,10 @@
+using Amazon.Runtime;
+using Amazon.S3;
 using FluentValidation;
 using JobTracker.API.Middleware;
 using JobTracker.Application.Validators;
 using JobTracker.Infrastructure;
-using Microsoft.OpenApi;
-
+using Microsoft.OpenApi; 
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,6 +31,7 @@ builder.Services.AddSwaggerGen(options =>
         Version = "v1"
     });
 
+   
     options.AddSecurityDefinition(schemeId, new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -46,11 +48,23 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+//  CLOUDFLARE R2 SETUP 
+var r2Config = builder.Configuration.GetSection("CloudflareR2");
+var credentials = new BasicAWSCredentials(r2Config["AccessKey"], r2Config["SecretKey"]);
+
+var s3Config = new AmazonS3Config
+{
+    // Points the official AWS SDK directly to Cloudflare's servers
+    ServiceURL = $"https://{r2Config["AccountId"]}.r2.cloudflarestorage.com",
+};
+
+// Register the S3 Client as a Singleton so your DocumentService can use it
+builder.Services.AddSingleton<IAmazonS3>(new AmazonS3Client(credentials, s3Config));
+// ──────────────────────────────
+
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
-
 builder.Services.AddValidatorsFromAssemblyContaining<CreateUserRequestValidator>();
-
 builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
@@ -66,10 +80,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseCors("AllowAll");
-
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
-
 app.Run();
