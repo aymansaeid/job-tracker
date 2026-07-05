@@ -1,10 +1,12 @@
 ﻿using JobTracker.API.Extensions;
 using JobTracker.Application.DTOs.Users;
 using JobTracker.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization; 
 using Microsoft.AspNetCore.Mvc;
 
 namespace JobTracker.API.Controllers;
 
+[Authorize] 
 [ApiController]
 [Route("api/[controller]")]
 public class UsersController : ControllerBase
@@ -16,17 +18,13 @@ public class UsersController : ControllerBase
         _userService = userService;
     }
 
-    [HttpGet]
-    public async Task<IActionResult> GetAll()
+    
+    [HttpGet("me")]
+    public async Task<IActionResult> GetMyProfile()
     {
-        var result = await _userService.GetAllAsync();
-        return Ok(result);
-    }
+        var userId = User.GetUserId();
 
-    [HttpGet("{id:int}")]
-    public async Task<IActionResult> GetById(int id)
-    {
-        var result = await _userService.GetByIdAsync(id);
+        var result = await _userService.GetByIdAsync(userId);
 
         if (result is null)
             return NotFound();

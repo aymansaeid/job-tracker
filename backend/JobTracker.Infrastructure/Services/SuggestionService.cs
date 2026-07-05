@@ -112,7 +112,7 @@ public class SuggestionService : ISuggestionService
 
     public async Task<List<JobUpdateSuggestionResponse>> GetPendingSuggestionsAsync(int userId)
     {
-        return await _context.JobUpdateSuggestions
+        return await _context.JobUpdateSuggestions.AsNoTracking()
             .Where(x => x.UserId == userId && x.Status == SuggestionStatus.Pending)
             .OrderByDescending(x => x.CreatedAt)
             .Select(x => new JobUpdateSuggestionResponse

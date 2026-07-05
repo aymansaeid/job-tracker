@@ -4,20 +4,47 @@ using FluentValidation;
 using JobTracker.API.Middleware;
 using JobTracker.Application.Validators;
 using JobTracker.Infrastructure;
-using Microsoft.OpenApi; 
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.OpenApi;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
+// STRICT CORS 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
+    options.AddPolicy("StrictProductionPolicy", policy =>
     {
-        policy.AllowAnyOrigin()
+        policy.WithOrigins(
+                "http://localhost:5173", // Keep local dev working
+                "https://your-vercel-app-url.vercel.app" 
+              )
               .AllowAnyMethod()
-              .AllowAnyHeader();
+              .AllowAnyHeader()
+              .AllowCredentials(); // Required if you ever use HttpOnly cookies
+    });
+});
+
+//  RATE LIMITING 
+builder.Services.AddRateLimiter(options =>
+{
+    // A standard policy: Max 100 requests per minute per IP address
+    options.AddFixedWindowLimiter("StandardPolicy", opt =>
+    {
+        opt.Window = TimeSpan.FromMinutes(1);
+        opt.PermitLimit = 100;
+        opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        opt.QueueLimit = 2; // Allow 2 requests to wait in line if they exceed the limit
+    });
+
+    // A strict policy for Login/Register: Max 5 attempts per minute
+    options.AddFixedWindowLimiter("AuthPolicy", opt =>
+    {
+        opt.Window = TimeSpan.FromMinutes(1);
+        opt.PermitLimit = 5;
     });
 });
 
@@ -25,13 +52,8 @@ builder.Services.AddSwaggerGen(options =>
 {
     const string schemeId = "bearer";
 
-    options.SwaggerDoc("v1", new OpenApiInfo
-    {
-        Title = "JobTracker API",
-        Version = "v1"
-    });
+    options.SwaggerDoc("v1", new OpenApiInfo { Title = "JobTracker API", Version = "v1" });
 
-   
     options.AddSecurityDefinition(schemeId, new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -48,19 +70,11 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-//  CLOUDFLARE R2 SETUP 
+// ── CLOUDFLARE R2 SETUP ──
 var r2Config = builder.Configuration.GetSection("CloudflareR2");
 var credentials = new BasicAWSCredentials(r2Config["AccessKey"], r2Config["SecretKey"]);
-
-var s3Config = new AmazonS3Config
-{
-    // Points the official AWS SDK directly to Cloudflare's servers
-    ServiceURL = $"https://{r2Config["AccountId"]}.r2.cloudflarestorage.com",
-};
-
-// Register the S3 Client as a Singleton so your DocumentService can use it
+var s3Config = new AmazonS3Config { ServiceURL = $"https://{r2Config["AccountId"]}.r2.cloudflarestorage.com" };
 builder.Services.AddSingleton<IAmazonS3>(new AmazonS3Client(credentials, s3Config));
-// ──────────────────────────────
 
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
@@ -79,8 +93,12 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-app.UseCors("AllowAll");
+
+// APPLY MIDDLEWARE 
+app.UseCors("StrictProductionPolicy"); 
+app.UseRateLimiter();                  
 app.UseAuthentication();
 app.UseAuthorization();
-app.MapControllers();
+app.MapControllers().RequireRateLimiting("StandardPolicy"); // Apply standard 100 req/min everywhere by default
+
 app.Run();

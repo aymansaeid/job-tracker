@@ -74,6 +74,7 @@ public class JobApplicationService : IJobApplicationService
     {
         // 1. Start with a base query
         var query = _context.JobApplications
+            .AsNoTracking()
             .Where(x => x.UserId == userId)
             .AsQueryable();
 
@@ -120,7 +121,7 @@ public class JobApplicationService : IJobApplicationService
 
     public async Task<JobApplicationResponse?> GetByIdAsync(int userId, int id)
     {
-        var application = await _context.JobApplications.Include(x => x.LinkedEmails) // join the tables 
+        var application = await _context.JobApplications.AsNoTracking().Include(x => x.LinkedEmails) // join the tables 
             .FirstOrDefaultAsync(x => x.Id == id && x.UserId == userId);
 
         return application is null ? null : MapToResponse(application);
@@ -212,7 +213,7 @@ public class JobApplicationService : IJobApplicationService
 
     public async Task<List<ApplicationStageHistoryResponse>> GetStageHistoryAsync(int userId, int applicationId)
     {
-        var ownsApplication = await _context.JobApplications
+        var ownsApplication = await _context.JobApplications.AsNoTracking()
             .AnyAsync(x => x.Id == applicationId && x.UserId == userId);
 
         if (!ownsApplication)
@@ -260,7 +261,7 @@ public class JobApplicationService : IJobApplicationService
     public async Task<DashboardStatsResponse> GetDashboardStatsAsync(int userId)
     {
         // 1. Group by stage and count directly in the database (ignoring archived ones)
-        var stageCounts = await _context.JobApplications
+        var stageCounts = await _context.JobApplications.AsNoTracking()
             .Where(x => x.UserId == userId && !x.IsArchived)
             .GroupBy(x => x.CurrentStage)
             .Select(g => new { Stage = g.Key, Count = g.Count() })

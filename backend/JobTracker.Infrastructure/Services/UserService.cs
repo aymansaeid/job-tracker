@@ -49,21 +49,9 @@ public class UserService : IUserService
         };
     }
 
-    public async Task<List<UserResponse>> GetAllAsync()
-    {
-        return await _context.Users
-            .Select(x => new UserResponse
-            {
-                Id = x.Id,
-                FullName = x.FullName,
-                Email = x.Email
-            })
-            .ToListAsync();
-    }
-
     public async Task<UserResponse?> GetByIdAsync(int id)
     {
-        return await _context.Users
+        return await _context.Users.AsNoTracking()
             .Where(x => x.Id == id)
             .Select(x => new UserResponse
             {

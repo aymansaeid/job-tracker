@@ -8,10 +8,12 @@ namespace JobTracker.API.Middleware;
 public class GlobalExceptionHandler : IExceptionHandler
 {
     private readonly ILogger<GlobalExceptionHandler> _logger;
+    private readonly IWebHostEnvironment _env; 
 
-    public GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger)
+    public GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger, IWebHostEnvironment env)
     {
         _logger = logger;
+        _env = env;
     }
 
     public async ValueTask<bool> TryHandleAsync(
@@ -19,7 +21,8 @@ public class GlobalExceptionHandler : IExceptionHandler
         Exception exception,
         CancellationToken cancellationToken)
     {
-        _logger.LogError(exception, "Unhandled exception occurred.");
+        // Log the real error to your server console
+        _logger.LogError(exception, "Unhandled exception occurred: {Message}", exception.Message);
 
         var problemDetails = new ProblemDetails
         {
@@ -59,8 +62,17 @@ public class GlobalExceptionHandler : IExceptionHandler
 
             default:
                 problemDetails.Title = "Server error";
-                problemDetails.Detail = "An unexpected error occurred.";
                 problemDetails.Status = (int)HttpStatusCode.InternalServerError;
+
+                if (_env.IsDevelopment())
+                {
+                    problemDetails.Detail = exception.Message;
+                    problemDetails.Extensions["trace"] = exception.StackTrace;
+                }
+                else
+                {
+                    problemDetails.Detail = "An unexpected error occurred.";
+                }
                 break;
         }
 

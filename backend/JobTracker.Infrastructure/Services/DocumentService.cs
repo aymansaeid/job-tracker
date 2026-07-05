@@ -34,6 +34,7 @@ public class DocumentService : IDocumentService
     public async Task<List<UserDocument>> GetUserDocumentsAsync(int userId)
     {
         return await _context.UserDocuments
+            .AsNoTracking()
             .Where(d => d.UserId == userId)
             .OrderByDescending(d => d.UploadedAt)
             .ToListAsync();

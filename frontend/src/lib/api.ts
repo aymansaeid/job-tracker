@@ -135,8 +135,8 @@ export const integrationsApi = {
 // PUT /api/Users/password
 
 export const usersApi = {
-  getProfile: (id: number) =>
-    api.get(`/Users/${id}`),
+  getProfile: () =>
+    api.get(`/Users/me`),
 
   updateProfile: (data: { fullName: string }) =>
     api.put('/Users/profile', data),
