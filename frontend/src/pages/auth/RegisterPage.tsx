@@ -10,16 +10,16 @@ import { authApi } from '../../lib/api'
 import { useAuthStore } from '../../store/authStore'
 import type { AuthResponse } from '../../types'
 import type { Variants } from 'framer-motion'
-import { decodeJWT } from '../../lib/utils'
+import { decodeJWT, extractApiError } from '../../lib/utils'
 
 const schema = z.object({
   fullName: z.string().min(2, 'Name must be at least 2 characters'),
-  email:    z.string().email('Enter a valid email'),
+  email: z.string().email('Enter a valid email'),
   password: z.string()
     .min(8, 'At least 8 characters')
     .regex(/[A-Z]/, 'At least one uppercase letter')
     .regex(/[0-9]/, 'At least one number'),
-  confirm:  z.string(),
+  confirm: z.string(),
 }).refine(d => d.password === d.confirm, {
   message: "Passwords don't match",
   path: ['confirm'],
@@ -29,15 +29,15 @@ type FormData = z.infer<typeof schema>
 function passwordStrength(pw: string) {
   if (!pw) return { score: 0, label: '', color: '' }
   let s = 0
-  if (pw.length >= 8)           s++
-  if (pw.length >= 12)          s++
-  if (/[A-Z]/.test(pw))         s++
-  if (/[0-9]/.test(pw))         s++
-  if (/[^A-Za-z0-9]/.test(pw))  s++
-  if (s <= 1) return { score: s, label: 'Weak',   color: 'bg-red-500' }
-  if (s <= 2) return { score: s, label: 'Fair',   color: 'bg-yellow-500' }
-  if (s <= 3) return { score: s, label: 'Good',   color: 'bg-blue-500' }
-  return       { score: s, label: 'Strong', color: 'bg-emerald-500' }
+  if (pw.length >= 8) s++
+  if (pw.length >= 12) s++
+  if (/[A-Z]/.test(pw)) s++
+  if (/[0-9]/.test(pw)) s++
+  if (/[^A-Za-z0-9]/.test(pw)) s++
+  if (s <= 1) return { score: s, label: 'Weak', color: 'bg-red-500' }
+  if (s <= 2) return { score: s, label: 'Fair', color: 'bg-yellow-500' }
+  if (s <= 3) return { score: s, label: 'Good', color: 'bg-blue-500' }
+  return { score: s, label: 'Strong', color: 'bg-emerald-500' }
 }
 
 const cardVariants: Variants = {
@@ -66,7 +66,7 @@ export default function RegisterPage() {
   const { register, handleSubmit, formState: { errors, isSubmitting } } =
     useForm<FormData>({ resolver: zodResolver(schema) })
 
-  const onSubmit = async (data: FormData) => {
+const onSubmit = async (data: FormData) => {
     setServerErr(null)
     try {
       const res = await authApi.register({
@@ -89,8 +89,7 @@ export default function RegisterPage() {
       )
       navigate('/app/dashboard', { replace: true })
     } catch (err) {
-      const e = err as AxiosError<{ message?: string }>
-      setServerErr(e.response?.data?.message ?? 'Something went wrong. Please try again.')
+      setServerErr(extractApiError(err))
     }
   }
 
@@ -100,9 +99,9 @@ export default function RegisterPage() {
       className="min-h-screen bg-surface-base flex items-center justify-center px-4 py-16 relative overflow-hidden"
     >
       <div className="orb w-96 h-96 -top-24 -left-24 opacity-15"
-           style={{ background: 'radial-gradient(circle, rgba(34,211,238,0.3) 0%, transparent 70%)' }} />
+        style={{ background: 'radial-gradient(circle, rgba(34,211,238,0.3) 0%, transparent 70%)' }} />
       <div className="orb w-80 h-80 -bottom-20 -right-20 opacity-15"
-           style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.3) 0%, transparent 70%)', animationDelay: '5s' }} />
+        style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.3) 0%, transparent 70%)', animationDelay: '5s' }} />
       <div className="noise-overlay absolute inset-0 pointer-events-none" />
 
       <Link to="/" className="absolute top-6 left-6 flex items-center gap-2 z-10">
@@ -128,7 +127,7 @@ export default function RegisterPage() {
               <AnimatePresence>
                 {serverErr && (
                   <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                              className="flex items-center gap-3 rounded-xl bg-red-500/10 border border-red-500/25 px-4 py-3">
+                    className="flex items-center gap-3 rounded-xl bg-red-500/10 border border-red-500/25 px-4 py-3">
                     <AlertCircle size={15} className="text-red-400" />
                     <p className="text-sm text-red-300">{serverErr}</p>
                   </motion.div>
@@ -140,7 +139,7 @@ export default function RegisterPage() {
                   Full name
                 </label>
                 <input {...register('fullName')} type="text" placeholder="Jane Doe"
-                       autoComplete="name" className="input-glass" />
+                  autoComplete="name" className="input-glass" />
                 {errors.fullName && (
                   <p className="text-xs text-red-400 mt-1.5 flex items-center gap-1">
                     <AlertCircle size={11} /> {errors.fullName.message}
@@ -153,7 +152,7 @@ export default function RegisterPage() {
                   Email address
                 </label>
                 <input {...register('email')} type="email" placeholder="you@example.com"
-                       autoComplete="email" className="input-glass" />
+                  autoComplete="email" className="input-glass" />
                 {errors.email && (
                   <p className="text-xs text-red-400 mt-1.5 flex items-center gap-1">
                     <AlertCircle size={11} /> {errors.email.message}
@@ -167,11 +166,11 @@ export default function RegisterPage() {
                 </label>
                 <div className="relative">
                   <input {...register('password', { onChange: e => setPw(e.target.value) })}
-                         type={showPw ? 'text' : 'password'}
-                         placeholder="Min 8 chars, 1 uppercase, 1 number"
-                         autoComplete="new-password" className="input-glass pr-12" />
+                    type={showPw ? 'text' : 'password'}
+                    placeholder="Min 8 chars, 1 uppercase, 1 number"
+                    autoComplete="new-password" className="input-glass pr-12" />
                   <button type="button" onClick={() => setShowPw(v => !v)}
-                          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors">
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors">
                     {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
@@ -208,10 +207,10 @@ export default function RegisterPage() {
                 </label>
                 <div className="relative">
                   <input {...register('confirm')} type={showCf ? 'text' : 'password'}
-                         placeholder="Re-enter your password"
-                         autoComplete="new-password" className="input-glass pr-12" />
+                    placeholder="Re-enter your password"
+                    autoComplete="new-password" className="input-glass pr-12" />
                   <button type="button" onClick={() => setShowCf(v => !v)}
-                          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors">
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors">
                     {showCf ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
@@ -233,9 +232,9 @@ export default function RegisterPage() {
 
               <motion.div variants={field} className="pt-1">
                 <motion.button type="submit" disabled={isSubmitting}
-                               whileHover={isSubmitting ? {} : { scale: 1.02, y: -1 }}
-                               whileTap={isSubmitting ? {} : { scale: 0.98 }}
-                               className="btn-primary w-full flex items-center justify-center gap-2 py-3.5 disabled:opacity-60 disabled:cursor-not-allowed shadow-glow-cyan">
+                  whileHover={isSubmitting ? {} : { scale: 1.02, y: -1 }}
+                  whileTap={isSubmitting ? {} : { scale: 0.98 }}
+                  className="btn-primary w-full flex items-center justify-center gap-2 py-3.5 disabled:opacity-60 disabled:cursor-not-allowed shadow-glow-cyan">
                   {isSubmitting
                     ? <><Loader2 size={16} className="animate-spin" /> Creating account…</>
                     : <><Sparkles size={15} /> Create my free account</>

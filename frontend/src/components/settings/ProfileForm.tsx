@@ -6,7 +6,7 @@ import { Loader2, User, Mail, AlertCircle, CheckCircle2 } from 'lucide-react'
 import { useState } from 'react'
 import { usersApi } from '../../lib/api'
 import { useAuthStore } from '../../store/authStore'
-import { AxiosError } from 'axios'
+import { extractApiError } from '../../lib/utils'
 
 const schema = z.object({
   fullName: z.string().min(2, 'Name must be at least 2 characters'),
@@ -38,8 +38,7 @@ export default function ProfileForm() {
       setSuccess(true)
       setTimeout(() => setSuccess(false), 3000)
     } catch (err) {
-      const e = err as AxiosError<{ message?: string }>
-      setServerErr(e.response?.data?.message ?? 'Failed to update profile.')
+      setServerErr(extractApiError(err))
     }
   }
 

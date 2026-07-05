@@ -4,6 +4,7 @@ import Sidebar from './Sidebar'
 import Topbar from './Topbar'
 import WelcomeModal from '../common/WelcomeModal'
 import { NAV_ITEMS } from './navConfig'
+import { Toaster } from 'react-hot-toast'
 
 function AmbientBackground() {
   const reduceMotion = useReducedMotion()
@@ -56,7 +57,7 @@ export default function AppLayout() {
           </main>
         </div>
       </div>
-
+      <Toaster position="top-center" gutter={12} />
       <WelcomeModal />
     </div>
   )

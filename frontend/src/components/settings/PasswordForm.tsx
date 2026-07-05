@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { Loader2, Lock, Eye, EyeOff, AlertCircle, CheckCircle2 } from 'lucide-react'
 import { useState } from 'react'
 import { usersApi } from '../../lib/api'
-import { AxiosError } from 'axios'
+import { extractApiError } from '../../lib/utils'
 
 const schema = z.object({
   currentPassword: z.string().min(1, 'Current password is required'),
@@ -42,8 +42,7 @@ export default function PasswordForm() {
       reset()
       setTimeout(() => setSuccess(false), 3000)
     } catch (err) {
-      const e = err as AxiosError<{ message?: string }>
-      setServerErr(e.response?.data?.message ?? 'Failed to change password.')
+      setServerErr(extractApiError(err))
     }
   }
 

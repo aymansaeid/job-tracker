@@ -2,6 +2,7 @@ import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import { ApplicationStage } from '../types'
 import { EmploymentType } from '../types'
+import { AxiosError } from 'axios' 
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -72,4 +73,31 @@ export function decodeJWT(token: string): Record<string, unknown> | null {
   } catch {
     return null
   }
+}
+
+export function extractApiError(error: unknown): string {
+  if (error instanceof AxiosError) {
+    // 1. Catch .NET FluentValidation errors (e.g., "Password must contain a number")
+    if (error.response?.data?.extensions?.errors) {
+      const errorsObj = error.response.data.extensions.errors;
+      const firstKey = Object.keys(errorsObj)[0];
+      return errorsObj[firstKey][0]; 
+    }
+
+    // 2. Catch standard .NET ProblemDetails (e.g., "Email already exists")
+    if (error.response?.data?.detail) {
+      return error.response.data.detail;
+    }
+
+    // 3. Fallback for custom message properties
+    if (error.response?.data?.message) {
+      return error.response.data.message;
+    }
+  }
+
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return "An unexpected error occurred. Please try again.";
 }

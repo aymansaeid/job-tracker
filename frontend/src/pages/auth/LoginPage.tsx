@@ -5,11 +5,10 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link, useNavigate } from 'react-router-dom'
 import { z } from 'zod'
-import { AxiosError } from 'axios'
 import { authApi } from '../../lib/api'
 import { useAuthStore } from '../../store/authStore'
 import type { Variants } from 'framer-motion'
-import { decodeJWT } from '../../lib/utils'
+import { decodeJWT , extractApiError } from '../../lib/utils'
 
 const schema = z.object({
   email:    z.string().email('Enter a valid email'),
@@ -68,8 +67,7 @@ export default function LoginPage() {
       )
       navigate('/app/dashboard', { replace: true })
     } catch (err) {
-      const e = err as AxiosError<{ message?: string }>
-      setServerErr(e.response?.data?.message ?? 'Invalid email or password.')
+      setServerErr(extractApiError(err))
     }
   }
 

@@ -9,6 +9,7 @@ import { integrationsApi, usersApi } from '../../lib/api'
 import { AxiosError } from 'axios'
 import type { User } from '../../types'
 import { CometPanel } from '../common/CometPanel'
+import { extractApiError } from '../../lib/utils'
 
 export default function GmailIntegration() {
   const user = useAuthStore(s => s.user)
@@ -75,8 +76,7 @@ export default function GmailIntegration() {
       await integrationsApi.disconnect()
       if (user) setUser({ ...user, googleRefreshToken: undefined })
     } catch (err) {
-      const e = err as AxiosError<{ message?: string }>
-      setServerErr(e.response?.data?.message ?? 'Failed to disconnect Gmail.')
+  setServerErr(extractApiError(err))
     } finally {
       setLoading(false)
     }
