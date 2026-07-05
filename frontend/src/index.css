@@ -133,3 +133,34 @@ h1, h2, h3, h4, h5, h6 {
     transition-duration: 0.01ms !important;
   }
 }
+/* ===== Comet Glow — slow rotating conic-gradient border ===== */
+@keyframes comet-spin {
+  to { transform: rotate(1turn); }
+}
+
+@layer components {
+  .comet-border {
+    position: relative;
+    isolation: isolate;
+  }
+  .comet-border::before {
+    content: '';
+    position: absolute;
+    inset: -60%;
+    z-index: 0;
+    /* Mostly transparent — one bright arc sweeps past, rest of the edge
+       stays a normal quiet hairline. This is what reads as "premium" instead
+       of "loading spinner." */
+    background: conic-gradient(
+      from 0deg,
+      transparent 0deg,
+      transparent 250deg,
+      #22d3ee 275deg,
+      #8b5cf6 300deg,
+      #e879f9 322deg,
+      transparent 345deg,
+      transparent 360deg
+    );
+    animation: comet-spin var(--comet-duration, 11s) linear infinite;
+  }
+}

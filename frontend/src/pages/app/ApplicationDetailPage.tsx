@@ -1,8 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
-import { motion } from 'framer-motion'
-import { ArrowLeft } from 'lucide-react'
 import { applicationsApi } from '../../lib/api'
 import type {
   JobApplication, HistoryEvent, ApplicationStage, EmploymentType
@@ -143,32 +141,18 @@ export default function ApplicationDetailPage() {
 
   // ── Render ────────────────────────────────────────────────
 
-  return (
+return (
     <>
-      {/* Back button (Hidden here because we added a sleek one directly inside ApplicationDetail, but keeping it as fallback if you prefer) */}
-      <motion.button
-        initial={{ opacity: 0, x: -8 }}
-        animate={{ opacity: 1, x: 0 }}
-        onClick={() => navigate('/app/applications')}
-        className="flex items-center gap-2 text-sm text-slate-400 hover:text-slate-200 transition-colors mb-6 group hidden"
-      >
-        <ArrowLeft
-          size={15}
-          className="group-hover:-translate-x-0.5 transition-transform"
-        />
-        Back to Applications
-      </motion.button>
-
-      {/* Two-column layout */}
-      <div className="grid lg:grid-cols-[1fr_280px] gap-6 items-start mt-2">
+      {/* Two-column layout with min-w-0 strict layout safety constraints */}
+      <div className="grid lg:grid-cols-[1fr_280px] gap-6 items-start mt-2 w-full min-w-0 overflow-hidden">
 
         {/* Left — details + timeline */}
-        <div className="space-y-6">
+        <div className="space-y-6 min-w-0 w-full">
           <ApplicationDetail
             app={app}
             onEdit={() => setEditOpen(true)}
             onDelete={() => deleteMutation.mutate()}
-            onArchive={handleToggleArchive} // FIX 3: Pass the smart toggle down!
+            onArchive={handleToggleArchive}
           />
 
           <div className="glass rounded-2xl border border-white/10 p-6">
@@ -180,7 +164,7 @@ export default function ApplicationDetailPage() {
         </div>
 
         {/* Right — stage changer */}
-        <div className="space-y-5">
+        <div className="space-y-5 shrink-0 sticky top-6">
           <StageChanger
             currentStage={app.currentStage}
             onChange={(stage) => stageMutation.mutate(stage)}

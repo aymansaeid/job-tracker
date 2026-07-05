@@ -7,6 +7,7 @@ import { useState } from 'react'
 import type { AISuggestion } from '../../types'
 import { timeAgo, cn } from '../../lib/utils'
 import { STAGE_META, StageIconChip } from '../common/StageBadge'
+import { CometPanel } from '../common/CometPanel'
 
 interface CardProps {
   suggestion: AISuggestion
@@ -77,7 +78,6 @@ function SuggestionCard({ suggestion, onApprove, onReject, isApproving, isReject
               <p className="text-sm font-medium leading-snug text-slate-200">
                 {suggestion.aiReasoning ?? 'New update detected from this email.'}
               </p>
-              {/* 👇 FIX: Added the missing `<a` tag here */}
               {suggestion.actionUrl && (
                 <a
                   href={suggestion.actionUrl}
@@ -239,23 +239,15 @@ export default function AiSuggestionsWidget({
           {Array.from({ length: 3 }).map((_, i) => <SuggestionSkeleton key={i} />)}
         </div>
       ) : suggestions.length === 0 ? (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="glass relative overflow-hidden rounded-2xl p-10 text-center"
-        >
-          <motion.div
-            className="pointer-events-none absolute inset-x-0 top-0 h-px"
-            style={{ background: 'linear-gradient(90deg, transparent, #22d3ee, transparent)' }}
-            animate={{ x: ['-100%', '100%'] }}
-            transition={{ duration: 2.6, repeat: Infinity, ease: 'linear' }}
-          />
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-gradient-to-br from-cyan-500/10 to-violet-500/10 shadow-inner">
-            <Sparkles size={20} className="text-cyan-400" />
-          </div>
-          <p className="mb-1.5 text-sm font-bold text-slate-200">Inbox Zero</p>
-          <p className="text-xs text-slate-500">Hit "Sync Gmail" to let the AI scan for new updates.</p>
-        </motion.div>
+        <CometPanel duration={6} contentClassName="p-10 text-center">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="relative overflow-hidden">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-gradient-to-br from-cyan-500/10 to-violet-500/10 shadow-inner">
+              <Sparkles size={20} className="text-cyan-400" />
+            </div>
+            <p className="mb-1.5 text-sm font-bold text-slate-200">Inbox Zero</p>
+            <p className="text-xs text-slate-500">Hit "Sync Gmail" to let the AI scan for new updates.</p>
+          </motion.div>
+        </CometPanel>
       ) : (
         <div className="grid items-stretch gap-5 sm:grid-cols-2 xl:grid-cols-3">
           <AnimatePresence mode="popLayout">

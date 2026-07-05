@@ -8,6 +8,7 @@ import { useAuthStore } from '../../store/authStore'
 import { integrationsApi, usersApi } from '../../lib/api'
 import { AxiosError } from 'axios'
 import type { User } from '../../types'
+import { CometPanel } from '../common/CometPanel'
 
 export default function GmailIntegration() {
   const user = useAuthStore(s => s.user)
@@ -22,7 +23,7 @@ export default function GmailIntegration() {
   const fetchProfile = useCallback(async () => {
     if (!user?.id) { setFetching(false); return }
     try {
-      const res = await usersApi.getProfile(user.id)
+      const res = await usersApi.getProfile()
       setUser(res.data as User)
     } catch {
       // ignore — we tried
@@ -84,7 +85,10 @@ export default function GmailIntegration() {
   return (
     <div className="space-y-4">
 
-      <div className="glass rounded-2xl overflow-hidden">
+      {/* Was: <div className="glass rounded-2xl overflow-hidden"> — this is the
+          one settings surface that deserves the comet treatment, since it's the
+          switch that powers AI Suggestions. */}
+      <CometPanel duration={11} contentClassName="overflow-hidden">
 
         <div className="flex items-center justify-between gap-4 px-6 py-5 border-b border-white/[0.07]">
           <div className="flex items-center gap-3">
@@ -205,7 +209,7 @@ export default function GmailIntegration() {
           )}
 
         </div>
-      </div>
+      </CometPanel>
     </div>
   )
 }
