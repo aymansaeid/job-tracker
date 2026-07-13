@@ -23,8 +23,23 @@ public class SuggestionsController : ControllerBase
         try
         {
             var userId = User.GetUserId();
-            var newCount = await _suggestionService.ProcessRecentEmailsAsync(userId);
-            return Ok(new { Message = $"Sync complete. Found {newCount} new suggestions." });
+            var result = await _suggestionService.ProcessRecentEmailsAsync(userId);
+
+            if (result.RateLimited)
+            {
+                return StatusCode(429, new
+                {
+                    message = result.Message,
+                    retryAfterMinutes = result.RetryAfterMinutes
+                });
+            }
+
+            if (!result.Success)
+            {
+                return StatusCode(500, new { message = result.Message });
+            }
+
+            return Ok(new { Message = result.Message });
         }
         catch (UnauthorizedAccessException ex) when (ex.Message == "GMAIL_TOKEN_EXPIRED")
         {

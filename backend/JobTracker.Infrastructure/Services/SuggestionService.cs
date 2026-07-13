@@ -13,6 +13,9 @@ public class SuggestionService : ISuggestionService
     private readonly IGmailService _gmailService;
     private readonly IEmailParserService _parserService;
 
+    // 🔒 Cooldown between syncs. Change to TimeSpan.FromHours(8) for "3x per day".
+    private static readonly TimeSpan SyncCooldown = TimeSpan.FromHours(1);
+
     public SuggestionService(
         ApplicationDbContext context,
         IGmailService gmailService,
@@ -23,8 +26,33 @@ public class SuggestionService : ISuggestionService
         _parserService = parserService;
     }
 
-    public async Task<int> ProcessRecentEmailsAsync(int userId)
+    public async Task<SyncResult> ProcessRecentEmailsAsync(int userId)
     {
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null)
+        {
+            return new SyncResult { Success = false, Message = "User not found." };
+        }
+
+        // 🔒 Enforce cooldown BEFORE touching Gmail or Gemini
+        if (user.LastSyncAt.HasValue)
+        {
+            var elapsed = DateTime.UtcNow - user.LastSyncAt.Value;
+            if (elapsed < SyncCooldown)
+            {
+                var waitTime = SyncCooldown - elapsed;
+                var minutesLeft = (int)Math.Ceiling(waitTime.TotalMinutes);
+
+                return new SyncResult
+                {
+                    Success = false,
+                    RateLimited = true,
+                    RetryAfterMinutes = minutesLeft,
+                    Message = $"You can sync again in {minutesLeft} minute(s)."
+                };
+            }
+        }
+
         // 1. Get recent emails from Gmail
         var recentEmails = await _gmailService.GetRecentJobEmailsAsync(userId, 10);
         int newSuggestionsCount = 0;
@@ -87,6 +115,10 @@ public class SuggestionService : ISuggestionService
             }
         }
 
+        // 🔒 Stamp the sync time regardless of whether new suggestions were found,
+        // so the cooldown applies even to "no new emails" syncs.
+        user.LastSyncAt = DateTime.UtcNow;
+
         if (newSuggestionsCount > 0)
         {
             // 💡 FIX 3: Wrap the DB save in a try-catch to prevent 500 errors
@@ -100,18 +132,27 @@ public class SuggestionService : ISuggestionService
                 // Clear the tracker so these bad entities don't poison the next request.
                 _context.ChangeTracker.Clear();
 
-                // Return 0 because we didn't actually save anything successfully.
-                return 0;
+                return new SyncResult { Success = false, Message = "Sync failed due to a database conflict. Please try again." };
             }
             catch (Exception)
             {
                 // Catch any other weird DB glitches
                 _context.ChangeTracker.Clear();
-                return 0;
+                return new SyncResult { Success = false, Message = "Sync failed due to an unexpected error." };
             }
         }
+        else
+        {
+            // No new suggestions, but still persist the LastSyncAt stamp
+            await _context.SaveChangesAsync();
+        }
 
-        return newSuggestionsCount;
+        return new SyncResult
+        {
+            Success = true,
+            NewSuggestionsCount = newSuggestionsCount,
+            Message = $"Sync complete. Found {newSuggestionsCount} new suggestions."
+        };
     }
 
     public async Task<List<JobUpdateSuggestionResponse>> GetPendingSuggestionsAsync(int userId)

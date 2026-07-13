@@ -1,13 +1,15 @@
 import { motion } from 'framer-motion'
-import { Bell, RefreshCw, Link as LinkIcon, Sparkles } from 'lucide-react'
+import { Bell, RefreshCw, Link as LinkIcon, Sparkles, Clock } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { suggestionsApi, integrationsApi } from '../../lib/api'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { NAV_ITEMS } from './navConfig'
 import { extractApiError } from '../../lib/utils'
 import { notify } from '../../lib/toast'
+
+const SYNC_COOLDOWN_KEY = 'gmailSyncRetryAt'
 
 export default function Topbar({ title }: { title: string }) {
   const user = useAuthStore((s) => s.user)
@@ -18,6 +20,38 @@ export default function Topbar({ title }: { title: string }) {
 
   const [syncing, setSyncing] = useState(false)
   const [isConnecting, setIsConnecting] = useState(false)
+  const [retryAt, setRetryAt] = useState<number | null>(() => {
+    const stored = localStorage.getItem(SYNC_COOLDOWN_KEY)
+    return stored ? Number(stored) : null
+  })
+  const [remainingMinutes, setRemainingMinutes] = useState(0)
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  // Tick the countdown every second while a cooldown is active
+  useEffect(() => {
+    if (!retryAt) {
+      setRemainingMinutes(0)
+      return
+    }
+
+    const tick = () => {
+      const msLeft = retryAt - Date.now()
+      if (msLeft <= 0) {
+        setRetryAt(null)
+        setRemainingMinutes(0)
+        localStorage.removeItem(SYNC_COOLDOWN_KEY)
+        if (intervalRef.current) clearInterval(intervalRef.current)
+        return
+      }
+      setRemainingMinutes(Math.ceil(msLeft / 60000))
+    }
+
+    tick()
+    intervalRef.current = setInterval(tick, 1000)
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current)
+    }
+  }, [retryAt])
 
   const handleSync = useCallback(async () => {
     setSyncing(true)
@@ -26,7 +60,13 @@ export default function Topbar({ title }: { title: string }) {
       await queryClient.invalidateQueries({ queryKey: ['suggestions'] })
       notify.success('Gmail sync complete!')
     } catch (error: any) {
-      if (error?.response?.status !== 403) {
+      if (error?.response?.status === 429) {
+        const minutes = error?.response?.data?.retryAfterMinutes ?? 60
+        const until = Date.now() + minutes * 60_000
+        setRetryAt(until)
+        localStorage.setItem(SYNC_COOLDOWN_KEY, String(until))
+        notify.error(error?.response?.data?.message ?? `You can sync again in ${minutes} minute(s).`)
+      } else if (error?.response?.status !== 403) {
         notify.error(`Sync failed: ${extractApiError(error)}`)
       }
     } finally {
@@ -59,6 +99,7 @@ export default function Topbar({ title }: { title: string }) {
   }
 
   const PageIcon = NAV_ITEMS.find((item) => item.to === pathname)?.icon ?? Sparkles
+  const isCoolingDown = !!retryAt && remainingMinutes > 0
 
   return (
 <header className="glass relative flex h-16 shrink-0 items-center justify-between border-b border-white/[0.07] px-6">
@@ -78,14 +119,24 @@ export default function Topbar({ title }: { title: string }) {
       <div className="relative z-10 flex items-center gap-3">
         {user?.isGmailConnected ? (
           <motion.button
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
+            whileHover={{ scale: isCoolingDown ? 1 : 1.03 }}
+            whileTap={{ scale: isCoolingDown ? 1 : 0.97 }}
             onClick={handleSync}
-            disabled={syncing}
+            disabled={syncing || isCoolingDown}
+            title={isCoolingDown ? `Next sync available in ${remainingMinutes} minute(s)` : undefined}
             className="flex items-center gap-2 rounded-xl border border-cyan-500/25 bg-cyan-500/10 px-3.5 py-2 text-xs font-semibold text-cyan-400 shadow-lg shadow-cyan-500/10 transition-colors hover:bg-cyan-500/20 disabled:opacity-60"
           >
-            <RefreshCw size={13} className={syncing ? 'animate-spin' : ''} />
-            {syncing ? 'Syncing…' : 'Sync Gmail'}
+            {isCoolingDown ? (
+              <>
+                <Clock size={13} />
+                Next sync in {remainingMinutes}m
+              </>
+            ) : (
+              <>
+                <RefreshCw size={13} className={syncing ? 'animate-spin' : ''} />
+                {syncing ? 'Syncing…' : 'Sync Gmail'}
+              </>
+            )}
           </motion.button>
         ) : (
           <motion.button

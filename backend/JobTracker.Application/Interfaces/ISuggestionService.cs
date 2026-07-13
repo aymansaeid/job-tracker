@@ -5,7 +5,7 @@ namespace JobTracker.Application.Interfaces;
 public interface ISuggestionService
 {
     // Scans inbox, runs AI, creates pending suggestions. Returns how many new ones were found.
-    Task<int> ProcessRecentEmailsAsync(int userId);
+    Task<SyncResult> ProcessRecentEmailsAsync(int userId);
 
     // Gets the list of pending suggestions for the dashboard widget
     Task<List<JobUpdateSuggestionResponse>> GetPendingSuggestionsAsync(int userId);
@@ -15,4 +15,5 @@ public interface ISuggestionService
 
     // User clicks "Ignore" -> Hides the suggestion
     Task<bool> RejectSuggestionAsync(int userId, int suggestionId);
+
 }
