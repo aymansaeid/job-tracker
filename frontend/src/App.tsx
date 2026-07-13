@@ -2,9 +2,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AnimatePresence } from 'framer-motion'
 import { Navigate, Route, BrowserRouter as Router, Routes, useLocation } from 'react-router-dom'
 import { useAuthStore } from './store/authStore'
-import AppLayout    from './components/layout/AppLayout'
-import LandingPage  from './pages/LandingPage'
-import LoginPage    from './pages/auth/LoginPage'
+import AppLayout from './components/layout/AppLayout'
+import LandingPage from './pages/LandingPage'
+import LoginPage from './pages/auth/LoginPage'
 import RegisterPage from './pages/auth/RegisterPage'
 import DashboardPage from './pages/app/DashboardPage'
 import ApplicationsPage from './pages/app/ApplicationsPage'
@@ -12,6 +12,8 @@ import KanbanPage from './pages/app/KanbanPage'
 import ApplicationDetailPage from './pages/app/ApplicationDetailPage'
 import SettingsPage from './pages/app/SettingsPage'
 import MyFoldersPage from './pages/app/MyFoldersPage'
+import ForgotPasswordPage from './pages/auth/ForgotPasswordPage'
+import ResetPasswordPage from './pages/auth/ResetPasswordPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -44,19 +46,20 @@ function AnimatedRoutes() {
       <Routes location={location} key={location.pathname}>
 
         {/* Public */}
-        <Route path="/"         element={<LandingPage />} />
-        <Route path="/login"    element={<RequireGuest><LoginPage /></RequireGuest>} />
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<RequireGuest><LoginPage /></RequireGuest>} />
         <Route path="/register" element={<RequireGuest><RegisterPage /></RequireGuest>} />
-
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         {/* Protected — all share AppLayout via nested routes */}
         <Route path="/app" element={<RequireAuth><AppLayout /></RequireAuth>}>
-          <Route index                  element={<Navigate to="dashboard" replace />} />
-          <Route path="dashboard"       element={<DashboardPage />} />
-          <Route path="kanban"          element={<KanbanPage />} />
-          <Route path="applications"    element={<ApplicationsPage />} />
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<DashboardPage />} />
+          <Route path="kanban" element={<KanbanPage />} />
+          <Route path="applications" element={<ApplicationsPage />} />
           <Route path="applications/:id" element={<ApplicationDetailPage />} />
-          <Route path="Folders"              element={<MyFoldersPage />} />
-          <Route path="settings"        element={<SettingsPage />} />
+          <Route path="Folders" element={<MyFoldersPage />} />
+          <Route path="settings" element={<SettingsPage />} />
         </Route>
 
         {/* Catch-all */}

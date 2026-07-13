@@ -7,7 +7,7 @@ const BASE_URL = import.meta.env.VITE_API_URL ?? 'https://localhost:7266/api'
 export const api = axios.create({
   baseURL: BASE_URL,
   headers: { 'Content-Type': 'application/json' },
-  timeout: 15000,
+  timeout: 45000,
 })
 
 // Attach JWT automatically
@@ -58,6 +58,11 @@ export const authApi = {
     api.post('/Auth/register', data),
   login: (data: { email: string; password: string }) =>
     api.post('/Auth/login', data),
+  forgotPassword: (data: { email: string }) =>
+    api.post('/Auth/forgot-password', data),
+
+  resetPassword: (data: { token: string; newPassword: string }) =>
+    api.post('/Auth/reset-password', data),
 }
 
 // ── Applications ──────────────────────────────────────────────

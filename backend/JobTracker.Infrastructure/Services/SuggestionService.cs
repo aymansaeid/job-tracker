@@ -81,6 +81,10 @@ public class SuggestionService : ISuggestionService
                 _context.JobUpdateSuggestions.Add(suggestion);
                 newSuggestionsCount++;
             }
+            else if (aiResult.IsJobRelated)
+            {
+                Console.WriteLine($"=== SKIPPED: job-related but no CompanyName. MessageId={email.MessageId}, Reasoning={aiResult.AiReasoning} ===");
+            }
         }
 
         if (newSuggestionsCount > 0)

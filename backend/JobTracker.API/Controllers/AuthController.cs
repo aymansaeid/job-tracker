@@ -34,4 +34,22 @@ public class AuthController : ControllerBase
         var result = await _authService.LoginAsync(request);
         return Ok(result);
     }
+
+    [AllowAnonymous]
+    [EnableRateLimiting("AuthPolicy")]
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ForgotPassword(ForgotPasswordRequest request)
+    {
+        await _authService.ForgotPasswordAsync(request);
+        return Ok(new { Message = "If that email exists, a reset link has been sent." });
+    }
+
+    [AllowAnonymous]
+    [EnableRateLimiting("AuthPolicy")]
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword(ResetPasswordRequest request)
+    {
+        await _authService.ResetPasswordAsync(request);
+        return Ok(new { Message = "Password has been reset successfully." });
+    }
 }

@@ -16,5 +16,8 @@ namespace JobTracker.Domain.Entities
         public List<JobApplication> JobApplications { get; set; } = new();
 
         public List<UserDocument> Documents { get; set; } = new();
+
+        public string? ResetPasswordToken { get; set; }
+        public DateTime? ResetPasswordTokenExpiry { get; set; }
     }
 }

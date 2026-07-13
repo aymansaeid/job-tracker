@@ -99,8 +99,16 @@ public class GmailService : IGmailService
         // 3. Search for job-related emails from the last 30 days
         // You can tweak this query to be as specific as you want
         var request = gmailClient.Users.Messages.List("me");
-        request.Q = "(subject:application OR subject:interview OR subject:offer OR subject:rejection OR subject:assessment OR subject:challenge) newer_than:30d";
-        request.MaxResults = maxResults;
+        request.Q = "(" +
+            // English
+            "subject:application OR subject:interview OR subject:offer OR subject:rejection OR subject:assessment OR subject:challenge OR " +
+            // Turkish
+            "subject:başvuru OR subject:mülakat OR subject:teklif OR subject:reddedildi OR subject:değerlendirme OR " +
+            // Arabic
+            "subject:مقابلة OR subject:طلب OR subject:وظيفة OR subject:عرض OR subject:رفض OR subject:تقييم OR " +
+            // German
+            "subject:bewerbung OR subject:vorstellungsgespräch OR subject:absage OR subject:angebot" +
+            ") newer_than:30d"; request.MaxResults = maxResults;
 
         var emails = new List<EmailMessageResponse>();
         Google.Apis.Gmail.v1.Data.ListMessagesResponse response;
@@ -114,7 +122,7 @@ public class GmailService : IGmailService
         {
             // 🧼 Token is dead! Clean the database so the user can re-authenticate cleanly.
             await DisconnectAsync(userId);
-            throw new UnauthorizedAccessException("GMAIL_TOKEN_EXPIRED"); // 👈 NEW: Throw to controller
+            throw new UnauthorizedAccessException("GMAIL_TOKEN_EXPIRED"); 
         }
         catch (Exception)
         {

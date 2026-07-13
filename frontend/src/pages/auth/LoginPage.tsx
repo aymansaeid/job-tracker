@@ -8,10 +8,10 @@ import { z } from 'zod'
 import { authApi } from '../../lib/api'
 import { useAuthStore } from '../../store/authStore'
 import type { Variants } from 'framer-motion'
-import { decodeJWT , extractApiError } from '../../lib/utils'
+import { decodeJWT, extractApiError } from '../../lib/utils'
 
 const schema = z.object({
-  email:    z.string().email('Enter a valid email'),
+  email: z.string().email('Enter a valid email'),
   password: z.string().min(1, 'Password is required'),
 })
 type FormData = z.infer<typeof schema>
@@ -77,9 +77,9 @@ export default function LoginPage() {
       className="min-h-screen bg-surface-base flex items-center justify-center px-4 relative overflow-hidden"
     >
       <div className="orb w-96 h-96 -top-24 -right-24 opacity-20"
-           style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.35) 0%, transparent 70%)', animationDelay: '2s' }} />
+        style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.35) 0%, transparent 70%)', animationDelay: '2s' }} />
       <div className="orb w-80 h-80 -bottom-20 -left-20 opacity-15"
-           style={{ background: 'radial-gradient(circle, rgba(34,211,238,0.3) 0%, transparent 70%)', animationDelay: '6s' }} />
+        style={{ background: 'radial-gradient(circle, rgba(34,211,238,0.3) 0%, transparent 70%)', animationDelay: '6s' }} />
       <div className="noise-overlay absolute inset-0 pointer-events-none" />
 
       <Link to="/" className="absolute top-6 left-6 flex items-center gap-2 z-10">
@@ -107,7 +107,7 @@ export default function LoginPage() {
 
               {serverErr && (
                 <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-                            className="flex items-center gap-3 rounded-xl bg-red-500/10 border border-red-500/25 px-4 py-3">
+                  className="flex items-center gap-3 rounded-xl bg-red-500/10 border border-red-500/25 px-4 py-3">
                   <AlertCircle size={15} className="text-red-400" />
                   <p className="text-sm text-red-300">{serverErr}</p>
                 </motion.div>
@@ -118,7 +118,7 @@ export default function LoginPage() {
                   Email address
                 </label>
                 <input {...register('email')} type="email" placeholder="you@example.com"
-                       autoComplete="email" className="input-glass" />
+                  autoComplete="email" className="input-glass" />
                 {errors.email && (
                   <p className="text-xs text-red-400 mt-1.5 flex items-center gap-1">
                     <AlertCircle size={11} /> {errors.email.message}
@@ -131,15 +131,15 @@ export default function LoginPage() {
                   <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">
                     Password
                   </label>
-                  <a href="#" className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors">
+                  <Link to="/forgot-password" className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors">
                     Forgot password?
-                  </a>
+                  </Link>
                 </div>
                 <div className="relative">
                   <input {...register('password')} type={showPw ? 'text' : 'password'}
-                         placeholder="••••••••" autoComplete="current-password" className="input-glass pr-12" />
+                    placeholder="••••••••" autoComplete="current-password" className="input-glass pr-12" />
                   <button type="button" onClick={() => setShowPw(v => !v)}
-                          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors">
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors">
                     {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
@@ -152,9 +152,9 @@ export default function LoginPage() {
 
               <motion.div variants={field} className="pt-1">
                 <motion.button type="submit" disabled={isSubmitting}
-                               whileHover={isSubmitting ? {} : { scale: 1.02, y: -1 }}
-                               whileTap={isSubmitting ? {} : { scale: 0.98 }}
-                               className="btn-primary w-full flex items-center justify-center gap-2 py-3.5 disabled:opacity-60 disabled:cursor-not-allowed">
+                  whileHover={isSubmitting ? {} : { scale: 1.02, y: -1 }}
+                  whileTap={isSubmitting ? {} : { scale: 0.98 }}
+                  className="btn-primary w-full flex items-center justify-center gap-2 py-3.5 disabled:opacity-60 disabled:cursor-not-allowed">
                   {isSubmitting
                     ? <><Loader2 size={16} className="animate-spin" /> Signing in…</>
                     : 'Sign in to JobTracker'
