@@ -1,10 +1,8 @@
-// ---- LandingPage.tsx ----
 import {
   motion,
   useMotionValue,
   useSpring,
   useTransform,
-  AnimatePresence,
 } from "framer-motion";
 import {
   ArrowRight,
@@ -18,9 +16,6 @@ import {
 import { Link } from "react-router-dom";
 import React, { useRef } from "react";
 
-/* ------------------------------------------------------------------ */
-/*  3D Tilt Card – hardware‑accelerated, depth‑layered hover effect  */
-/* ------------------------------------------------------------------ */
 function Feature3DCard({
   icon: Icon,
   title,
