@@ -113,11 +113,8 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
 });
 
 // ── 8. ENVIRONMENT & STATIC FILES ──
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
