@@ -14,7 +14,7 @@ import SettingsPage from './pages/app/SettingsPage'
 import MyFoldersPage from './pages/app/MyFoldersPage'
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage'
 import ResetPasswordPage from './pages/auth/ResetPasswordPage'
-import NotFoundPage from './pages/NotFoundPage'\
+import NotFoundPage from './pages/NotFoundPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
