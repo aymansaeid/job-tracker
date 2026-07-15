@@ -14,7 +14,7 @@ public class SuggestionService : ISuggestionService
     private readonly IEmailParserService _parserService;
 
     // 🔒 Cooldown between syncs. Change to TimeSpan.FromHours(8) for "3x per day".
-    private static readonly TimeSpan SyncCooldown = TimeSpan.FromHours(1);
+    private static readonly TimeSpan SyncCooldown = TimeSpan.FromMinutes(5);
 
     public SuggestionService(
         ApplicationDbContext context,

@@ -4,50 +4,64 @@ using FluentValidation;
 using JobTracker.API.Middleware;
 using JobTracker.Application.Validators;
 using JobTracker.Infrastructure;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.OpenApi;
 using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// ── 1. CORE API SERVICES ──
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
-// STRICT CORS 
+// ── 2. STRICT CORS POLICY ──
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("StrictProductionPolicy", policy =>
     {
         policy.WithOrigins(
-                "http://localhost:5173", // Keep local dev working
-                "https://your-vercel-app-url.vercel.app" 
+                "http://localhost:5173",                 // Local React Vite development
+                "https://your-vercel-app-url.vercel.app" // Your live Vercel production domain
               )
               .AllowAnyMethod()
               .AllowAnyHeader()
-              .AllowCredentials(); // Required if you ever use HttpOnly cookies
+              .AllowCredentials(); // Required for HttpOnly cookies or authenticated CORS
     });
 });
 
-//  RATE LIMITING 
+// ── 3. PER-IP RATE LIMITING ──
 builder.Services.AddRateLimiter(options =>
 {
-    // A standard policy: Max 100 requests per minute per IP address
-    options.AddFixedWindowLimiter("StandardPolicy", opt =>
-    {
-        opt.Window = TimeSpan.FromMinutes(1);
-        opt.PermitLimit = 100;
-        opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-        opt.QueueLimit = 2; // Allow 2 requests to wait in line if they exceed the limit
-    });
+    // Standard Policy: Max 100 requests per minute PER IP ADDRESS
+    options.AddPolicy("StandardPolicy", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? httpContext.Request.Headers.Host.ToString(),
+            factory: partition => new FixedWindowRateLimiterOptions
+            {
+                AutoReplenishment = true,
+                PermitLimit = 100,
+                QueueLimit = 2,
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                Window = TimeSpan.FromMinutes(1)
+            }));
 
-    // A strict policy for Login/Register: Max 5 attempts per minute
-    options.AddFixedWindowLimiter("AuthPolicy", opt =>
-    {
-        opt.Window = TimeSpan.FromMinutes(1);
-        opt.PermitLimit = 5;
-    });
+    // Strict Auth Policy: Max 5 attempts per minute PER IP ADDRESS (Apply this to Login/Register endpoints)
+    options.AddPolicy("AuthPolicy", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? httpContext.Request.Headers.Host.ToString(),
+            factory: partition => new FixedWindowRateLimiterOptions
+            {
+                AutoReplenishment = true,
+                PermitLimit = 5,
+                QueueLimit = 0,
+                Window = TimeSpan.FromMinutes(1)
+            }));
+
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 });
 
+// ── 4. SWAGGER / OPENAPI WITH JWT BEARER AUTH ──
 builder.Services.AddSwaggerGen(options =>
 {
     const string schemeId = "bearer";
@@ -61,7 +75,7 @@ builder.Services.AddSwaggerGen(options =>
         Scheme = "bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "Paste only the JWT token"
+        Description = "Paste only your valid JWT token below."
     });
 
     options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
@@ -70,12 +84,16 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-// ── CLOUDFLARE R2 SETUP ──
+// ── 5. CLOUDFLARE R2 OBJECT STORAGE ──
 var r2Config = builder.Configuration.GetSection("CloudflareR2");
 var credentials = new BasicAWSCredentials(r2Config["AccessKey"], r2Config["SecretKey"]);
-var s3Config = new AmazonS3Config { ServiceURL = $"https://{r2Config["AccountId"]}.r2.cloudflarestorage.com" };
+var s3Config = new AmazonS3Config
+{
+    ServiceURL = $"https://{r2Config["AccountId"]}.r2.cloudflarestorage.com"
+};
 builder.Services.AddSingleton<IAmazonS3>(new AmazonS3Client(credentials, s3Config));
 
+// ── 6. ARCHITECTURAL DEPENDENCIES & ERROR HANDLING ──
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddValidatorsFromAssemblyContaining<CreateUserRequestValidator>();
@@ -83,8 +101,18 @@ builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
 
+// ── 7. EXCEPTION HANDLING & CLOUD PROXY CONFIGURATION ──
 app.UseExceptionHandler();
 
+// CRITICAL FOR RAILWAY / CLOUD DEPLOYMENTS:
+// Tells ASP.NET Core to read the real client IP from the X-Forwarded-For header sent by the cloud load balancer.
+// Without this, rate limiting will block all users thinking they are coming from the same proxy IP.
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
+
+// ── 8. ENVIRONMENT & STATIC FILES ──
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -94,11 +122,15 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
-// APPLY MIDDLEWARE 
-app.UseCors("StrictProductionPolicy"); 
-app.UseRateLimiter();                  
+// ── 9. MIDDLEWARE PIPELINE (STRICT EXECUTION ORDER) ──
+app.UseCors("StrictProductionPolicy");
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
-app.MapControllers().RequireRateLimiting("StandardPolicy"); // Apply standard 100 req/min everywhere by default
+
+// ── 10. ENDPOINT MAPPING ──
+// Apply the 100 req/min StandardPolicy to all endpoints by default.
+// Use [EnableRateLimiting("AuthPolicy")] on your AuthController's Login/Register methods to override this!
+app.MapControllers().RequireRateLimiting("StandardPolicy");
 
 app.Run();
