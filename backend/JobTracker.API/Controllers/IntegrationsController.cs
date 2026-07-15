@@ -34,7 +34,6 @@ public class IntegrationsController : ControllerBase
         if (string.IsNullOrWhiteSpace(code) || string.IsNullOrWhiteSpace(state))
             return BadRequest("Invalid callback parameters.");
 
-        // The state contains our userId
         if (!int.TryParse(state, out int userId))
             return BadRequest("Invalid state parameter.");
 
@@ -43,18 +42,31 @@ public class IntegrationsController : ControllerBase
         if (!success)
             return BadRequest("Failed to connect Gmail account.");
 
-        // Return a tiny HTML script that tells the React app it succeeded and closes the popup
+        // No single-line comments (//) are used here to prevent accidental script breaking.
+        // Includes a fallback redirect to your live Vercel app if opened as a full tab.
         var html = @"
-            <html>
-                <body>
-                    <script>
-                        // Tell the React parent window we succeeded
+        <!DOCTYPE html>
+        <html>
+        <head><title>Gmail Connected</title></head>
+        <body style='background-color: #0f172a; color: #22d3ee; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0;'>
+            <div style='text-align: center;'>
+                <h3 style='margin-bottom: 8px;'>Gmail Connected Successfully!</h3>
+                <p style='color: #94a3b8; font-size: 14px;'>Closing window...</p>
+            </div>
+            <script>
+                try {
+                    if (window.opener && !window.opener.closed) {
                         window.opener.postMessage('google_auth_success', '*');
-                        // Automatically close this popup
-                        window.close();
-                    </script>
-                </body>
-            </html>";
+                        setTimeout(function() { window.close(); }, 800);
+                    } else {
+                        window.location.href = 'https://jobtracker-sys.vercel.app/app/dashboard';
+                    }
+                } catch (e) {
+                    window.location.href = 'https://jobtracker-sys.vercel.app/app/dashboard';
+                }
+            </script>
+        </body>
+        </html>";
 
         return Content(html, "text/html");
     }

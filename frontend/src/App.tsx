@@ -14,6 +14,7 @@ import SettingsPage from './pages/app/SettingsPage'
 import MyFoldersPage from './pages/app/MyFoldersPage'
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage'
 import ResetPasswordPage from './pages/auth/ResetPasswordPage'
+import NotFoundPage from './pages/NotFoundPage'\
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -51,6 +52,7 @@ function AnimatedRoutes() {
         <Route path="/register" element={<RequireGuest><RegisterPage /></RequireGuest>} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
+        
         {/* Protected — all share AppLayout via nested routes */}
         <Route path="/app" element={<RequireAuth><AppLayout /></RequireAuth>}>
           <Route index element={<Navigate to="dashboard" replace />} />
@@ -60,10 +62,13 @@ function AnimatedRoutes() {
           <Route path="applications/:id" element={<ApplicationDetailPage />} />
           <Route path="Folders" element={<MyFoldersPage />} />
           <Route path="settings" element={<SettingsPage />} />
+          
+          {/* Add this: Catches broken URLs inside the app workspace */}
+          <Route path="*" element={<NotFoundPage />} />
         </Route>
 
-        {/* Catch-all */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        {/* Global Catch-all: Renders 404 directly without creating a redirect loop */}
+        <Route path="*" element={<NotFoundPage />} />
 
       </Routes>
     </AnimatePresence>

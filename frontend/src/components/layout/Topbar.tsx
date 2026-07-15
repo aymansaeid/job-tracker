@@ -88,15 +88,22 @@ export default function Topbar({ title }: { title: string }) {
   }, [setGmailConnected, handleSync])
 
   const handleConnect = async () => {
-    setIsConnecting(true)
-    try {
-      const response = await integrationsApi.getGoogleAuthUrl()
-      window.open(response.data.url, 'GoogleAuth', 'width=500,height=600')
-    } catch (error) {
-      notify.error(`Connection failed: ${extractApiError(error)}`)
-      setIsConnecting(false)
-    }
+  setIsConnecting(true)
+  try {
+    const response = await integrationsApi.getGoogleAuthUrl()
+    const url = response.data.url
+    
+    const width = 500
+    const height = 600
+    const left = window.screen.width / 2 - width / 2
+    const top = window.screen.height / 2 - height / 2
+
+    window.open(url, 'GoogleAuth', `width=${width},height=${height},top=${top},left=${left},scrollbars=yes`)
+  } catch (error) {
+    notify.error(`Connection failed: ${extractApiError(error)}`)
+    setIsConnecting(false)
   }
+}
 
   const PageIcon = NAV_ITEMS.find((item) => item.to === pathname)?.icon ?? Sparkles
   const isCoolingDown = !!retryAt && remainingMinutes > 0
