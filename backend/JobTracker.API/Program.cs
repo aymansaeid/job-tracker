@@ -22,7 +22,7 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins(
                 "http://localhost:5173",                 // Local React Vite development
-                "https://your-vercel-app-url.vercel.app" // Your live Vercel production domain
+                "https://jobtracker-sys.vercel.app" // Your live Vercel production domain
               )
               .AllowAnyMethod()
               .AllowAnyHeader()
