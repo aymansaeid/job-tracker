@@ -62,7 +62,7 @@ export default function ForgotPasswordPage() {
               </div>
               <h1 className="font-display text-2xl font-bold text-white mb-2">Check your email</h1>
               <p className="text-slate-400 text-sm mb-6 leading-relaxed">
-                If an account exists for that email, we've sent a secure link to reset your password. The link will expire in 30 minutes.
+                If an account exists for that email, we've sent a secure link to reset your password. The link will expire in 30 minutes. Do not forget to check the spam box.
               </p>
               <Link to="/login" className="btn-primary w-full flex items-center justify-center py-3.5 text-sm font-semibold">
                 Return to Login

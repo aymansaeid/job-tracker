@@ -6,6 +6,7 @@ using JobTracker.Application.Interfaces;
 using JobTracker.Domain.Entities;
 using JobTracker.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using System.Security.Cryptography;
 
 namespace JobTracker.Infrastructure.Services;
@@ -16,20 +17,23 @@ public class AuthService : IAuthService
     private readonly IValidator<RegisterRequest> _registerValidator;
     private readonly IValidator<LoginRequest> _loginValidator;
     private readonly IJwtTokenService _jwtTokenService;
-    private readonly IEmailService _emailService; 
+    private readonly IEmailService _emailService;
+    private readonly IConfiguration _configuration;
 
     public AuthService(
         ApplicationDbContext context,
         IValidator<RegisterRequest> registerValidator,
         IValidator<LoginRequest> loginValidator,
         IJwtTokenService jwtTokenService,
-        IEmailService emailService)
+        IEmailService emailService,
+        IConfiguration configuration)
     {
         _context = context;
         _registerValidator = registerValidator;
         _loginValidator = loginValidator;
         _jwtTokenService = jwtTokenService;
         _emailService = emailService;
+        _configuration = configuration;
     }
 
     public async Task<AuthResponse> RegisterAsync(RegisterRequest request)
@@ -109,7 +113,8 @@ public class AuthService : IAuthService
 
         // 3. Build the reset link (Pointing to your React frontend!)
         // Note: Change localhost:5173 to your production URL later
-        var resetLink = $"http://localhost:5173/reset-password?token={token}";
+        var frontendUrl = _configuration["FrontendUrl"] ?? "http://localhost:5173";
+        var resetLink = $"{frontendUrl}/reset-password?token={token}";
 
         // 4. Send the email
         var emailBody = $@"
