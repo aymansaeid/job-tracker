@@ -12,7 +12,12 @@ using System.Threading.RateLimiting;
 var builder = WebApplication.CreateBuilder(args);
 
 // ── 1. CORE API SERVICES ──
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        // Forces all standard DateTime properties to serialize as UTC with trailing 'Z'
+        options.JsonSerializerOptions.Converters.Add(new UtcDateTimeConverter());
+    });
 builder.Services.AddEndpointsApiExplorer();
 
 // ── 2. STRICT CORS POLICY ──
@@ -131,3 +136,23 @@ app.UseAuthorization();
 app.MapControllers().RequireRateLimiting("StandardPolicy");
 
 app.Run();
+
+// ── 11. CUSTOM UTC JSON CONVERTER ──
+public class UtcDateTimeConverter : System.Text.Json.Serialization.JsonConverter<DateTime>
+{
+    public override DateTime Read(ref System.Text.Json.Utf8JsonReader reader, Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
+    {
+        return reader.GetDateTime().ToUniversalTime();
+    }
+
+    public override void Write(System.Text.Json.Utf8JsonWriter writer, DateTime value, System.Text.Json.JsonSerializerOptions options)
+    {
+        // If EF Core returns Unspecified, explicitly treat it as UTC. Otherwise, convert to Universal Time.
+        var utcDateTime = value.Kind == DateTimeKind.Unspecified
+            ? DateTime.SpecifyKind(value, DateTimeKind.Utc)
+            : value.ToUniversalTime();
+
+        // The trailing 'Z' forces React/JavaScript to automatically convert to the user's local timezone (e.g., UTC+3 Istanbul)
+        writer.WriteStringValue(utcDateTime.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"));
+    }
+}
