@@ -32,7 +32,21 @@ export default function Topbar({ title, onMenuClick }: TopbarProps) {
   })
   const [remainingMinutes, setRemainingMinutes] = useState(0)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const isGmailConnected = !!user?.googleRefreshToken
+
+  const isGmailConnected = useAuthStore(
+    (s) => s.isGmailConnected || !!s.user?.googleRefreshToken || !!(s.user as any)?.isGmailConnected
+  )
+
+  useEffect(() => {
+    if (user && !isGmailConnected) {
+      usersApi.getProfile()
+        .then((res) => {
+          if (res.data) setUser(res.data as Partial<User>)
+        })
+        .catch(() => {
+        })
+    }
+  }, [])
 
   useEffect(() => {
     if (!retryAt) {
@@ -86,7 +100,8 @@ export default function Topbar({ title, onMenuClick }: TopbarProps) {
         setIsConnecting(false)
         try {
           const res = await usersApi.getProfile()
-          setUser(res.data as Partial<User>)
+          // Explicitly force isGmailConnected to true so the UI updates instantly
+          setUser({ ...res.data, isGmailConnected: true } as Partial<User>)
           notify.success('Gmail connected successfully!')
           handleSync()
         } catch {
@@ -116,7 +131,6 @@ export default function Topbar({ title, onMenuClick }: TopbarProps) {
         window.location.href = url
         return
       }
-      // isConnecting stays true — cleared by the message listener above.
     } catch (error) {
       notify.error(`Connection failed: ${extractApiError(error)}`)
       setIsConnecting(false)

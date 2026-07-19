@@ -6,6 +6,7 @@ interface AuthState {
   user:            User | null
   token:           string | null
   isAuthenticated: boolean
+  isGmailConnected: boolean 
   setAuth:         (user: User, token: string) => void
   setUser:         (user: Partial<User>) => void
   logout:          () => void
@@ -18,30 +19,41 @@ export const useAuthStore = create<AuthState>()(
       user:            null,
       token:           null,
       isAuthenticated: false,
+      isGmailConnected: false,
 
       setAuth: (user, token) =>
-        set({ user, token, isAuthenticated: true }),
+        set({ 
+          user, 
+          token, 
+          isAuthenticated: true,
+          isGmailConnected: !!user.googleRefreshToken || !!(user as any).isGmailConnected 
+        }),
 
-      // Was a full replace — `setUser(res.data as User)` from a profile
-      // fetch would silently wipe any field the backend response doesn't
-      // include. Merging means a partial response can never erase data
-      // the rest of the app is still relying on.
       setUser: (patch) =>
-        set((state) => ({
-          user: state.user ? { ...state.user, ...patch } : (patch as User),
-        })),
+        set((state) => {
+          const updatedUser = state.user ? { ...state.user, ...patch } : (patch as User);
+          return {
+            user: updatedUser,
+            isGmailConnected: !!updatedUser.googleRefreshToken || !!(updatedUser as any).isGmailConnected || state.isGmailConnected
+          };
+        }),
 
       logout: () =>
-        set({ user: null, token: null, isAuthenticated: false }),
+        set({ user: null, token: null, isAuthenticated: false, isGmailConnected: false }),
 
       setGmailDisconnected: () =>
         set((state) => ({
           user: state.user ? { ...state.user, googleRefreshToken: undefined } : null,
+          isGmailConnected: false
         })),
     }),
     {
       name: 'auth-storage',
-      partialize: (state) => ({ user: state.user, token: state.token }),
+      partialize: (state) => ({ 
+        user: state.user, 
+        token: state.token,
+        isGmailConnected: state.isGmailConnected 
+      }),
       onRehydrateStorage: () => (state) => {
         if (state?.token) state.isAuthenticated = true
       },
