@@ -2,12 +2,13 @@ import { motion } from 'framer-motion'
 import { Bell, RefreshCw, Link as LinkIcon, Sparkles, Clock, Menu } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
-import { suggestionsApi, integrationsApi } from '../../lib/api'
+import { suggestionsApi, integrationsApi, usersApi } from '../../lib/api'
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { NAV_ITEMS } from './navConfig'
 import { extractApiError } from '../../lib/utils'
 import { notify } from '../../lib/toast'
+import type { User } from '../../types'
 
 const SYNC_COOLDOWN_KEY = 'gmailSyncRetryAt'
 
@@ -18,7 +19,7 @@ interface TopbarProps {
 
 export default function Topbar({ title, onMenuClick }: TopbarProps) {
   const user = useAuthStore((s) => s.user)
-  const setGmailConnected = useAuthStore((s) => s.setGmailConnected)
+  const setUser = useAuthStore((s) => s.setUser)
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const { pathname } = useLocation()
@@ -31,6 +32,7 @@ export default function Topbar({ title, onMenuClick }: TopbarProps) {
   })
   const [remainingMinutes, setRemainingMinutes] = useState(0)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const isGmailConnected = !!user?.googleRefreshToken
 
   useEffect(() => {
     if (!retryAt) {
@@ -79,17 +81,22 @@ export default function Topbar({ title, onMenuClick }: TopbarProps) {
   }, [queryClient])
 
   useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
+    const handleMessage = async (event: MessageEvent) => {
       if (event.data === 'google_auth_success') {
-        setGmailConnected()
         setIsConnecting(false)
-        notify.success('Gmail connected successfully!')
-        handleSync()
+        try {
+          const res = await usersApi.getProfile()
+          setUser(res.data as Partial<User>)
+          notify.success('Gmail connected successfully!')
+          handleSync()
+        } catch {
+          notify.error('Connected, but failed to refresh account status — try reloading.')
+        }
       }
     }
     window.addEventListener('message', handleMessage)
     return () => window.removeEventListener('message', handleMessage)
-  }, [setGmailConnected, handleSync])
+  }, [setUser, handleSync])
 
   const handleConnect = async () => {
     setIsConnecting(true)
@@ -104,10 +111,12 @@ export default function Topbar({ title, onMenuClick }: TopbarProps) {
       const top = window.screen.height / 2 - height / 2
 
       const popup = window.open(url, 'GoogleAuth', `width=${width},height=${height},top=${top},left=${left},scrollbars=yes`)
+
       if (!popup) {
         window.location.href = url
         return
       }
+      // isConnecting stays true — cleared by the message listener above.
     } catch (error) {
       notify.error(`Connection failed: ${extractApiError(error)}`)
       setIsConnecting(false)
@@ -142,7 +151,7 @@ export default function Topbar({ title, onMenuClick }: TopbarProps) {
       </div>
 
       <div className="relative z-10 flex items-center gap-2 sm:gap-3">
-        {user?.isGmailConnected ? (
+        {isGmailConnected ? (
           <motion.button
             whileHover={{ scale: isCoolingDown ? 1 : 1.03 }}
             whileTap={{ scale: isCoolingDown ? 1 : 0.97 }}

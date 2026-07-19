@@ -7,10 +7,9 @@ interface AuthState {
   token:           string | null
   isAuthenticated: boolean
   setAuth:         (user: User, token: string) => void
-  setUser:         (user: User) => void
+  setUser:         (user: Partial<User>) => void
   logout:          () => void
   setGmailDisconnected: () => void
-  setGmailConnected: () => void
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -23,20 +22,21 @@ export const useAuthStore = create<AuthState>()(
       setAuth: (user, token) =>
         set({ user, token, isAuthenticated: true }),
 
-      setUser: (user) =>
-        set({ user }),
+      // Was a full replace — `setUser(res.data as User)` from a profile
+      // fetch would silently wipe any field the backend response doesn't
+      // include. Merging means a partial response can never erase data
+      // the rest of the app is still relying on.
+      setUser: (patch) =>
+        set((state) => ({
+          user: state.user ? { ...state.user, ...patch } : (patch as User),
+        })),
 
       logout: () =>
         set({ user: null, token: null, isAuthenticated: false }),
 
       setGmailDisconnected: () =>
         set((state) => ({
-          user: state.user ? { ...state.user, isGmailConnected: false } : null
-        })),
-        
-      setGmailConnected: () =>
-        set((state) => ({
-          user: state.user ? { ...state.user, isGmailConnected: true } : null
+          user: state.user ? { ...state.user, googleRefreshToken: undefined } : null,
         })),
     }),
     {
