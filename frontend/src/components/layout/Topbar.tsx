@@ -95,14 +95,19 @@ export default function Topbar({ title, onMenuClick }: TopbarProps) {
     setIsConnecting(true)
     try {
       const response = await integrationsApi.getGoogleAuthUrl()
-      const url = response.data.url
-      
+      const url = response.data?.url as string
+      if (!url) throw new Error('No auth URL returned')
+
       const width = 500
       const height = 600
       const left = window.screen.width / 2 - width / 2
       const top = window.screen.height / 2 - height / 2
 
-      window.open(url, 'GoogleAuth', `width=${width},height=${height},top=${top},left=${left},scrollbars=yes`)
+      const popup = window.open(url, 'GoogleAuth', `width=${width},height=${height},top=${top},left=${left},scrollbars=yes`)
+      if (!popup) {
+        window.location.href = url
+        return
+      }
     } catch (error) {
       notify.error(`Connection failed: ${extractApiError(error)}`)
       setIsConnecting(false)
@@ -115,10 +120,9 @@ export default function Topbar({ title, onMenuClick }: TopbarProps) {
   return (
     <header className="glass relative flex h-16 shrink-0 items-center justify-between border-b border-white/[0.07] px-4 sm:px-6">
       <div className="relative z-10 flex items-center gap-3">
-        {/* Hamburger Menu Toggle (Mobile Only) */}
         <button
           onClick={onMenuClick}
-          className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-slate-300 hover:bg-white/10 hover:text-white md:hidden"
+          className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-slate-300 hover:bg-white/10 hover:text-white lg:hidden"
           title="Open Menu"
         >
           <Menu size={18} />
@@ -169,7 +173,7 @@ export default function Topbar({ title, onMenuClick }: TopbarProps) {
           >
             <LinkIcon size={13} />
             <span className="hidden sm:inline">{isConnecting ? 'Connecting…' : 'Connect Gmail'}</span>
-            <span className="sm:hidden">Connect</span>
+            <span className="sm:hidden">{isConnecting ? '…' : 'Connect'}</span>
           </motion.button>
         )}
 
